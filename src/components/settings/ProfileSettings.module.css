@@ -1,0 +1,223 @@
+.profileSettingsContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.settingsSection {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.sectionSubtitle {
+  font-size: 18px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin: 0 0 24px 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #f8fafc;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarPlaceholder {
+  font-size: 36px;
+  font-weight: 500;
+  color: #3498db;
+}
+
+.avatarOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.avatar:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarOverlayText {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fileInput {
+  display: none;
+}
+
+.avatarHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.formGroup input {
+  padding: 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+}
+
+.passwordStrengthIndicator {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.passwordStrengthBar {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.weak .passwordStrengthBar {
+  width: 33.33%;
+  background-color: #e53e3e;
+}
+
+.medium .passwordStrengthBar {
+  width: 66.66%;
+  background-color: #f6ad55;
+}
+
+.strong .passwordStrengthBar {
+  width: 100%;
+  background-color: #48bb78;
+}
+
+.passwordStrengthText {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.passwordRequirements {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #718096;
+}
+
+.passwordRequirements li {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 4px;
+}
+
+.passwordRequirements li::before {
+  content: "✖";
+  position: absolute;
+  left: 0;
+  color: #cbd5e0;
+}
+
+.passwordRequirements li.fulfilled::before {
+  content: "✓";
+  color: #48bb78;
+}
+
+.passwordMismatch {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.successMessage {
+  background-color: #e6fffa;
+  border-left: 4px solid #38b2ac;
+  color: #234e52;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.errorMessage {
+  background-color: #fff5f5;
+  border-left: 4px solid #e53e3e;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .formActions {
+    justify-content: stretch;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+}

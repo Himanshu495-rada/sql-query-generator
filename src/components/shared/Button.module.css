@@ -1,0 +1,163 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Variants */
+.primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.secondary {
+  background-color: #f8fafc;
+  color: #2c3e50;
+  border: 1px solid #e2e8f0;
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.danger:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
+.success {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.success:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.outline {
+  background-color: transparent;
+  color: #3498db;
+  border: 1px solid #3498db;
+}
+
+.outline:hover:not(:disabled) {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Sizes */
+.small {
+  padding: 6px 12px;
+  font-size: 14px;
+  height: 32px;
+}
+
+.medium {
+  padding: 8px 16px;
+  font-size: 15px;
+  height: 40px;
+}
+
+.large {
+  padding: 12px 24px;
+  font-size: 16px;
+  height: 48px;
+}
+
+/* States & Modifiers */
+.fullWidth {
+  width: 100%;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+/* Loading state */
+.loading {
+  color: transparent;
+}
+
+.loadingSpinner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+.secondary .loadingSpinner {
+  border: 2px solid rgba(44, 62, 80, 0.1);
+  border-top-color: #2c3e50;
+}
+
+.outline .loadingSpinner {
+  border: 2px solid rgba(52, 152, 219, 0.1);
+  border-top-color: #3498db;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Icon positioning */
+.iconLeft {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.iconRight {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.buttonText {
+  line-height: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .small {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .medium {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .large {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+}

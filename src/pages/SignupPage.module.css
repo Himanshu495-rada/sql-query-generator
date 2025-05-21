@@ -1,0 +1,411 @@
+.signupPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+}
+
+.signupContainer {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  min-height: 700px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.signupFormContainer {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.signupHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  background-color: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.signupHeader h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.signupHeader p {
+  margin: 0;
+  font-size: 16px;
+  color: #718096;
+}
+
+.signupForm {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.formGroup input {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.formGroup input:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.inputError {
+  border-color: #e53e3e !important;
+}
+
+.fieldError {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.passwordStrength {
+  margin-top: 8px;
+}
+
+.strengthBar {
+  height: 4px;
+  border-radius: 2px;
+  background-color: #edf2f7;
+  position: relative;
+  overflow: hidden;
+}
+
+.strengthBar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.weak::after {
+  width: 30%;
+  background-color: #e53e3e;
+}
+
+.medium::after {
+  width: 60%;
+  background-color: #ed8936;
+}
+
+.strong::after {
+  width: 100%;
+  background-color: #38a169;
+}
+
+.strengthText {
+  margin-top: 4px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.weak .strengthText {
+  color: #e53e3e;
+}
+
+.medium .strengthText {
+  color: #ed8936;
+}
+
+.strong .strengthText {
+  color: #38a169;
+}
+
+.termsAgreement {
+  margin: 4px 0;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.checkbox input {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  height: 18px;
+  width: 18px;
+  background-color: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.checkbox input:checked ~ .checkmark {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox input:checked ~ .checkmark:after {
+  display: block;
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.termsAgreement a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.termsAgreement a:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+}
+
+.divider span {
+  position: relative;
+  padding: 0 16px;
+  background-color: white;
+  color: #718096;
+  font-size: 14px;
+}
+
+.socialSignups {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.socialButton span {
+  margin-left: 8px;
+}
+
+.socialButton:hover {
+  background-color: #f8fafc;
+}
+
+.socialButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.google:hover {
+  border-color: #4285f4;
+}
+
+.github:hover {
+  border-color: #24292e;
+}
+
+.loginPrompt {
+  text-align: center;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.loginPrompt a {
+  color: #3498db;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.loginPrompt a:hover {
+  text-decoration: underline;
+}
+
+.signupImageContainer {
+  flex: 1;
+  display: none; /* Hidden on mobile, shown on larger screens */
+}
+
+.signupImage {
+  height: 100%;
+  position: relative;
+  background-image: url("/images/database-code-bg.jpg"); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(45, 55, 72, 0.9) 0%,
+    rgba(26, 32, 44, 0.9) 100%
+  );
+}
+
+.imageContent {
+  position: relative;
+  z-index: 1;
+  padding: 48px;
+  color: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.imageContent h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.imageContent p {
+  font-size: 18px;
+  margin: 0 0 24px 0;
+  opacity: 0.9;
+}
+
+.imageContent ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.imageContent li {
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.errorMessage {
+  background-color: #fff5f5;
+  border-left: 4px solid #e53e3e;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .signupImageContainer {
+    display: block;
+  }
+}
+
+@media (max-width: 1024px) {
+  .signupContainer {
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 767px) {
+  .signupPage {
+    background-color: #ffffff;
+  }
+
+  .signupContainer {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .signupFormContainer {
+    padding: 32px 24px;
+  }
+
+  .signupHeader h1 {
+    font-size: 24px;
+  }
+
+  .signupForm {
+    padding: 0;
+  }
+}

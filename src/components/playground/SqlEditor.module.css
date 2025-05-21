@@ -1,0 +1,239 @@
+.sqlEditorContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #ddd;
+  height: 42px;
+}
+
+.headerTabs {
+  display: flex;
+  height: 100%;
+}
+
+.tab {
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: 14px;
+  color: #718096;
+  cursor: pointer;
+  border-right: 1px solid #ddd;
+}
+
+.activeTab {
+  color: #3498db;
+  font-weight: 500;
+  box-shadow: inset 0 -2px 0 #3498db;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+}
+
+.explanationToggle {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #4a5568;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.explanationToggle:hover {
+  background-color: #edf2f7;
+  color: #2c3e50;
+}
+
+.editorContent {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.sqlTextarea {
+  flex: 1;
+  padding: 16px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2d3748;
+  border: none;
+  resize: none;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.sqlTextarea:focus {
+  outline: none;
+}
+
+.sqlTextarea:disabled {
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+}
+
+.editorFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #f8fafc;
+  border-top: 1px solid #ddd;
+}
+
+.footerHints {
+  font-size: 12px;
+  color: #718096;
+}
+
+.footerHints kbd {
+  background-color: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  color: #4a5568;
+  display: inline-block;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  margin: 0 2px;
+}
+
+.explanationContainer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 300px;
+  background-color: #fff;
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.explanationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.explanationHeader h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #718096;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #edf2f7;
+  color: #2c3e50;
+}
+
+.explanationContent {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+.dmlWarningOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dmlWarningModal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.warningIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.dmlWarningModal h3 {
+  margin: 0 0 16px 0;
+  color: #e74c3c;
+}
+
+.dmlWarningModal p {
+  margin: 0 0 12px 0;
+  color: #2d3748;
+  line-height: 1.6;
+}
+
+.warningActions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .editorFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .editorFooter button {
+    width: 100%;
+  }
+
+  .explanationContainer {
+    width: 100%;
+  }
+}

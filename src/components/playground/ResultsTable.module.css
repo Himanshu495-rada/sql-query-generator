@@ -1,0 +1,280 @@
+.resultsTableContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 12px 0;
+}
+
+.tableInfo {
+  display: flex;
+  align-items: center;
+}
+
+.resultCount {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.tableActions {
+  display: flex;
+  gap: 8px;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.expandButton:hover {
+  background-color: #f1f5f9;
+  color: #3498db;
+}
+
+.tableWrapper {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.resultsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.resultsTable th,
+.resultsTable td {
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.resultsTable th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #334155;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.resultsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.resultsTable tr:hover {
+  background-color: #f1f5f9;
+}
+
+.filterRow {
+  background-color: #f8fafc !important;
+}
+
+.filterRow th {
+  padding: 6px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.filterInput {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.nullValue {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.tablePagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paginationControls select {
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.pageNavigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageButtons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageButton {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #3498db;
+}
+
+.pageButton:disabled {
+  color: #cbd5e0;
+  cursor: not-allowed;
+}
+
+/* Loading state */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 152, 219, 0.3);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error state */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #e53e3e;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.errorIcon {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.errorMessage {
+  color: #718096;
+  margin-top: 8px;
+  font-size: 14px;
+  max-width: 500px;
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #cbd5e0;
+}
+
+.emptyDescription {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* Expanded table in modal */
+.expandedTableContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exportButtons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tablePagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .pageNavigation {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

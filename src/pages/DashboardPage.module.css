@@ -1,0 +1,397 @@
+.dashboardPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8fafc;
+}
+
+.mainContainer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboardContent {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.welcomeSection {
+  margin-bottom: 32px;
+}
+
+.welcomeSection h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.welcomeSection p {
+  margin: 0;
+  font-size: 16px;
+  color: #718096;
+}
+
+.statsSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.statIcon {
+  font-size: 36px;
+  margin-right: 20px;
+  background-color: #edf2f7;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statInfo {
+  flex: 1;
+}
+
+.statInfo h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #718096;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.statChange {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.positive {
+  color: #2ecc71;
+}
+
+.negative {
+  color: #e74c3c;
+}
+
+.dashboardGridContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.recentSection,
+.playgroundsSection,
+.queriesSection {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  height: 100%;
+}
+
+.queriesSection {
+  grid-column: span 2;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+}
+
+.activityUser {
+  margin-right: 12px;
+}
+
+.userAvatar,
+.userAvatarPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.userAvatarPlaceholder {
+  background-color: #3498db;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.activityDetails {
+  flex: 1;
+}
+
+.activityText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4a5568;
+  margin-bottom: 4px;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+.activityTarget {
+  font-style: italic;
+  color: #4a5568;
+}
+
+.activityTime {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.playgroundsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playgroundCard {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.playgroundCard:hover {
+  background-color: #edf2f7;
+}
+
+.playgroundIcon {
+  font-size: 24px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.playgroundInfo {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.playgroundInfo h3 {
+  margin: 0 0 5px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.playgroundDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.playgroundDatabase {
+  font-weight: 500;
+  color: #3498db;
+}
+
+.sampleQueriesList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.queryCard {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.queryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.queryHeader h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.queryDatabase {
+  font-size: 12px;
+  color: #3498db;
+  font-weight: 500;
+  background-color: #ebf8ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.queryCode {
+  background-color: #2d3748;
+  color: #f7fafc;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  white-space: pre-wrap;
+  margin: 0 0 16px 0;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.queryActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.createPlaygroundForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.formGroup input,
+.formGroup select {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.formNote {
+  font-size: 13px;
+  color: #a0aec0;
+  margin-top: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .dashboardGridContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .queriesSection {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .statsSection {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .sampleQueriesList {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardContent {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsSection {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .statInfo h3 {
+    font-size: 12px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
+  .queryActions {
+    flex-direction: column;
+  }
+}

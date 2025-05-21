@@ -1,0 +1,139 @@
+.promptInputContainer {
+  position: relative;
+  width: 100%;
+}
+
+.promptTextarea {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+
+.promptTextarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.promptTextarea::placeholder {
+  color: #a0aec0;
+}
+
+.promptControls {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 0;
+  margin-top: 8px;
+}
+
+.suggestionsContainer {
+  position: absolute;
+  width: 100%;
+  max-height: 300px; /* Increase the height */
+  overflow-y: auto; /* Make it scrollable */
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  top: calc(100% + 4px);
+  border: 1px solid #e2e8f0;
+}
+
+.suggestionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+}
+
+.suggestionsHeader h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #718096;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background-color: #f1f5f9;
+  color: #e53e3e;
+}
+
+.suggestionsSection {
+  padding: 8px 0;
+}
+
+.suggestionsSection h5 {
+  padding: 0 16px;
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.suggestionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestion {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.suggestion:hover {
+  background-color: #f1f5f9;
+}
+
+.exampleText {
+  font-weight: 500;
+  color: #2d3748;
+  margin-bottom: 2px;
+}
+
+.exampleDescription {
+  font-size: 12px;
+  color: #718096;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .promptTextarea {
+    min-height: 80px;
+    padding: 12px;
+  }
+
+  .suggestionsContainer {
+    max-height: 250px;
+  }
+}

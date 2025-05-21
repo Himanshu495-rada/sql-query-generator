@@ -1,0 +1,340 @@
+.sampleQueriesContainer {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  padding: 20px;
+  border-bottom: 1px solid #e0e6ed;
+  background-color: #f0f2f5;
+}
+
+.header h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.header p {
+  margin: 0;
+  font-size: 14px;
+  color: #5d6d7e;
+}
+
+.controls {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.tableSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.tableSelect label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+}
+
+.tableSelect select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #2c3e50;
+  background-color: white;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  flex: 2;
+  min-width: 300px;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+}
+
+.searchBox input {
+  width: 100%;
+  padding: 10px;
+  padding-right: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.searchBox input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.clearSearch {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #95a5a6;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.clearSearch:hover {
+  background-color: #eee;
+  color: #e74c3c;
+}
+
+.categoryFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 180px;
+}
+
+.categoryFilter label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+}
+
+.categoryFilter select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #2c3e50;
+  background-color: white;
+}
+
+.queriesList {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.queryCard {
+  background-color: #f9f9f9;
+  border: 1px solid #e0e6ed;
+  border-radius: 6px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.queryCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.queryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.queryTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.queryTitle h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.categoryBadge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.basic {
+  background-color: #e9f7fe;
+  color: #3498db;
+}
+
+.intermediate {
+  background-color: #fef9e7;
+  color: #f39c12;
+}
+
+.advanced {
+  background-color: #f9ebff;
+  color: #9b59b6;
+}
+
+.reporting {
+  background-color: #eafaf1;
+  color: #2ecc71;
+}
+
+.queryActions {
+  display: flex;
+  gap: 8px;
+}
+
+.copyButton,
+.useButton {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copyButton {
+  background-color: #f1f1f1;
+  color: #555;
+}
+
+.copyButton:hover {
+  background-color: #ddd;
+}
+
+.useButton {
+  background-color: #3498db;
+  color: white;
+}
+
+.useButton:hover {
+  background-color: #2980b9;
+}
+
+.queryDescription {
+  font-size: 14px;
+  color: #5d6d7e;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.queryCode {
+  background-color: #fafbfc;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+  padding: 12px;
+  overflow: auto;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #24292e;
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+}
+
+.queryTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.selectTablePrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  flex: 1;
+}
+
+.promptIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.selectTablePrompt h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.selectTablePrompt p {
+  margin: 0;
+  font-size: 14px;
+  color: #5d6d7e;
+  max-width: 400px;
+}
+
+.noQueries {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.noQueries p {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .controls,
+  .filters {
+    flex-direction: column;
+  }
+
+  .categoryFilter {
+    width: 100%;
+  }
+
+  .queryHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .queryActions {
+    width: 100%;
+  }
+
+  .copyButton,
+  .useButton {
+    flex: 1;
+    text-align: center;
+  }
+}

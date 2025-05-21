@@ -1,0 +1,150 @@
+.recentContainer {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.viewAll {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #3498db;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.viewAll:hover {
+  color: #2980b9;
+}
+
+.playgroundsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.playgroundCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.playgroundCard:hover {
+  background-color: #ecf0f1;
+}
+
+.playgroundInfo {
+  flex: 1;
+}
+
+.playgroundName {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+}
+
+.playgroundMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+
+.database,
+.lastModified,
+.queries {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.playgroundActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.editButton {
+  background-color: #f1c40f;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #f39c12;
+}
+
+.deleteButton {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+}
+
+.noPlaygrounds {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 0;
+  color: #95a5a6;
+  text-align: center;
+}
+
+.createButton {
+  display: inline-block;
+  background-color: #3498db;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: #2980b9;
+}
+
+@media (max-width: 768px) {
+  .playgroundMeta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

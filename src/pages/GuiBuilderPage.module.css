@@ -1,0 +1,450 @@
+.guiBuilderPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8fafc;
+}
+
+.mainContainer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.builderHeader {
+  margin-bottom: 24px;
+}
+
+.builderHeader h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #2c3e50;
+}
+
+.builderHeader p {
+  margin: 0;
+  color: #718096;
+}
+
+.noConnectionMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  text-align: center;
+}
+
+.noConnectionIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.noConnectionMessage h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.noConnectionMessage p {
+  margin: 0 0 24px 0;
+  color: #718096;
+}
+
+.builderContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.tableSelection {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.tableSelection h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.tableCard {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tableCard:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.selectedTable {
+  border-color: #3498db;
+  background-color: #ebf8ff;
+}
+
+.tableIcon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.tableDetails {
+  flex: 1;
+}
+
+.tableName {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.tableStats {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
+}
+
+.fieldSelection,
+.conditionsSection,
+.joinsSection,
+.sortLimitSection,
+.previewExecuteSection,
+.resultsSection {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.fieldActions {
+  display: flex;
+  gap: 8px;
+}
+
+.smallButton {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  font-size: 12px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.smallButton:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.fieldCard {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fieldCard:hover {
+  border-color: #cbd5e0;
+  background-color: #f8fafc;
+}
+
+.selectedField {
+  border-color: #3498db;
+  background-color: #ebf8ff;
+}
+
+.fieldIcon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.fieldDetails {
+  flex: 1;
+  overflow: hidden;
+}
+
+.fieldName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fieldType {
+  font-size: 11px;
+  color: #718096;
+}
+
+.emptyMessage {
+  padding: 16px;
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.conditionRow,
+.joinRow,
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.conjunctionSelect {
+  width: 80px;
+}
+
+.fieldSelect {
+  flex: 1;
+}
+
+.operatorSelect {
+  width: 140px;
+}
+
+.valueInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #a0aec0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.removeButton:hover {
+  background-color: #fed7d7;
+  color: #e53e3e;
+}
+
+.emptyConditions,
+.emptyJoins,
+.emptySort {
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  color: #718096;
+}
+
+.joinTypeSelect {
+  width: 120px;
+}
+
+.joinTables {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+}
+
+.joinTable {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.joinDot {
+  margin: 0 4px;
+  color: #718096;
+}
+
+.joinEquals {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.sortLimitSection {
+  display: flex;
+  gap: 24px;
+}
+
+.sortSection,
+.limitSection {
+  flex: 1;
+}
+
+.sortLabel,
+.limitLabel {
+  margin-right: 8px;
+  color: #4a5568;
+}
+
+.limitInput {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.limitRow {
+  display: flex;
+  align-items: center;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.previewExecuteSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sqlPreview {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.sqlPreview pre {
+  margin: 0;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 14px;
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+.executeSection {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.queryResults h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.errorContainer {
+  padding: 16px;
+  background-color: #fff5f5;
+  border-radius: 6px;
+  border-left: 4px solid #e53e3e;
+}
+
+.errorContainer h2 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #c53030;
+}
+
+.errorMessage {
+  color: #c53030;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.connectModalContent {
+  padding: 16px 0;
+}
+
+@media (max-width: 768px) {
+  .sortLimitSection {
+    flex-direction: column;
+  }
+
+  .conditionRow,
+  .joinRow,
+  .sortRow {
+    flex-wrap: wrap;
+  }
+
+  .conjunctionSelect,
+  .fieldSelect,
+  .operatorSelect,
+  .valueInput {
+    width: 100%;
+    flex: auto;
+    margin-bottom: 8px;
+  }
+
+  .joinTables {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .joinTable {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .joinEquals {
+    margin: 8px 0;
+  }
+
+  .removeButton {
+    align-self: flex-end;
+  }
+}

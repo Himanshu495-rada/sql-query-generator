@@ -1,0 +1,296 @@
+.navbarContainer {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.scrolled {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 64px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+}
+
+.sidebarToggle {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 20px;
+  padding: 0;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.toggleIcon {
+  width: 24px;
+  height: 2px;
+  background-color: #2d3748;
+  transition: all 0.3s ease;
+}
+
+.appBranding {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 32px;
+  width: 32px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.appTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navActions {
+  display: flex;
+  gap: 12px;
+}
+
+.navAuth {
+  margin-left: 12px;
+}
+
+.userProfile {
+  position: relative;
+}
+
+.userProfileButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.userProfileButton:hover {
+  background-color: #f7fafc;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userAvatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #3498db;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.userName {
+  color: #2d3748;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.dropdownArrow {
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #718096;
+  transition: transform 0.2s;
+}
+
+.dropdownActive {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 200px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  z-index: 200;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  color: #2d3748;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #f7fafc;
+  color: #3498db;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 4px 0;
+}
+
+.mobileMenuButton {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 20px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.menuBar {
+  width: 24px;
+  height: 2px;
+  background-color: #2d3748;
+  transition: all 0.3s ease;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .navbarRight {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background-color: white;
+    flex-direction: column;
+    padding: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    align-items: flex-start;
+  }
+
+  .navActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .navActions button {
+    width: 100%;
+  }
+
+  .navAuth {
+    margin-left: 0;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .userProfile {
+    width: 100%;
+  }
+
+  .userProfileButton {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .menuActive {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobileMenuButton {
+    display: flex;
+  }
+
+  .mobileMenuActive .menuBar:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+  }
+
+  .mobileMenuActive .menuBar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobileMenuActive .menuBar:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+  }
+
+  .dropdownMenu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    margin-top: 8px;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .appTitle {
+    font-size: 16px;
+  }
+
+  .logo {
+    margin-right: 8px;
+  }
+}

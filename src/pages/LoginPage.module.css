@@ -1,0 +1,351 @@
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+}
+
+.loginContainer {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  min-height: 600px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.loginFormContainer {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  background-color: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.loginHeader h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.loginHeader p {
+  margin: 0;
+  font-size: 16px;
+  color: #718096;
+}
+
+.loginForm {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.passwordLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgotPassword {
+  font-size: 14px;
+  color: #3498db;
+  text-decoration: none;
+}
+
+.forgotPassword:hover {
+  text-decoration: underline;
+}
+
+.formGroup input {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.formGroup input:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.rememberMe {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.checkbox input {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  height: 18px;
+  width: 18px;
+  background-color: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  margin-right: 8px;
+  position: relative;
+}
+
+.checkbox input:checked ~ .checkmark {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox input:checked ~ .checkmark:after {
+  display: block;
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+}
+
+.divider span {
+  position: relative;
+  padding: 0 16px;
+  background-color: white;
+  color: #718096;
+  font-size: 14px;
+}
+
+.socialLogins {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.socialButton span {
+  margin-left: 8px;
+}
+
+.socialButton:hover {
+  background-color: #f8fafc;
+}
+
+.socialButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.google:hover {
+  border-color: #4285f4;
+}
+
+.github:hover {
+  border-color: #24292e;
+}
+
+.registerPrompt {
+  text-align: center;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.registerPrompt a {
+  color: #3498db;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.registerPrompt a:hover {
+  text-decoration: underline;
+}
+
+.loginImageContainer {
+  flex: 1;
+  display: none; /* Hidden on mobile, shown on larger screens */
+}
+
+.loginImage {
+  height: 100%;
+  position: relative;
+  background-image: url("/images/database-bg.jpg"); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(52, 152, 219, 0.8) 0%,
+    rgba(41, 128, 185, 0.9) 100%
+  );
+}
+
+.imageContent {
+  position: relative;
+  z-index: 1;
+  padding: 48px;
+  color: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.imageContent h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.imageContent p {
+  font-size: 18px;
+  margin: 0 0 24px 0;
+  opacity: 0.9;
+}
+
+.imageContent ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.imageContent li {
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.errorMessage {
+  background-color: #fff5f5;
+  border-left: 4px solid #e53e3e;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .loginImageContainer {
+    display: block;
+  }
+}
+
+@media (max-width: 1024px) {
+  .loginContainer {
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 767px) {
+  .loginPage {
+    background-color: #ffffff;
+  }
+
+  .loginContainer {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .loginFormContainer {
+    padding: 32px 24px;
+  }
+
+  .loginHeader h1 {
+    font-size: 24px;
+  }
+
+  .loginForm {
+    padding: 0;
+  }
+}

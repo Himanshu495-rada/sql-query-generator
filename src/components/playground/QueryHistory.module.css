@@ -1,0 +1,230 @@
+.historyContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f8fafc;
+  border-left: 1px solid #ddd;
+  width: 320px;
+  overflow-y: auto;
+}
+
+.historyHeader {
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.historyHeader h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.historyFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.searchContainer {
+  margin-bottom: 8px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.filterButtonGroup {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.filterButton {
+  flex: 1;
+  padding: 6px 0;
+  background-color: #f8fafc;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.filterButton:not(:last-child) {
+  border-right: 1px solid #ddd;
+}
+
+.filterButton:hover:not(.active) {
+  background-color: #edf2f7;
+}
+
+.filterButton.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.clearButton:hover {
+  text-decoration: underline;
+}
+
+.historyList {
+  flex: 1;
+  padding: 8px;
+}
+
+.historyItem {
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.errorItem {
+  border-left: 3px solid #e74c3c;
+}
+
+.historyItemHeader {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.historyItemHeader:hover {
+  background-color: #f1f5f9;
+}
+
+.headerPrompt {
+  font-size: 14px;
+  color: #2d3748;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.rowCount {
+  background-color: #e6f7ff;
+  color: #0086f1;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.timestamp {
+  margin-right: auto;
+}
+
+.expandIcon {
+  font-size: 10px;
+}
+
+.historyItemDetails {
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-top: 1px solid #edf2f7;
+}
+
+.promptSection,
+.sqlSection {
+  margin-bottom: 12px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #718096;
+  margin-bottom: 4px;
+}
+
+.promptText {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.sqlCode {
+  background-color: #edf2f7;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: #2d3748;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.historyItemActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.useQueryButton {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.useQueryButton:hover {
+  background-color: #2980b9;
+}
+
+.emptyHistory {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #a0aec0;
+  font-size: 14px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+@media (max-width: 768px) {
+  .historyContainer {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #ddd;
+  }
+}

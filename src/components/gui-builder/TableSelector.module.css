@@ -1,0 +1,396 @@
+.tableSelectorContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.toolBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #ecf0f1;
+  background-color: #f9f9f9;
+}
+
+.searchContainer {
+  position: relative;
+  flex-grow: 1;
+  margin-right: 16px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 16px;
+  padding-right: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.clearSearch {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #95a5a6;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.clearSearch:hover {
+  background-color: #eee;
+  color: #e74c3c;
+}
+
+.viewControls {
+  display: flex;
+  gap: 8px;
+}
+
+.viewButton {
+  border: none;
+  background-color: #f0f2f5;
+  color: #7f8c8d;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.viewButton:hover {
+  background-color: #e1e5eb;
+}
+
+.viewButton.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.tableCount {
+  padding: 8px 16px;
+  color: #7f8c8d;
+  font-size: 13px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.tableCard {
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.tableCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #d0d7de;
+}
+
+.tableCard.selected {
+  border-color: #3498db;
+  background-color: #ebf5fb;
+}
+
+.tableCard.related {
+  border-color: #9b59b6;
+  background-color: #f5eefa;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.tableName {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  word-break: break-all;
+}
+
+.tableStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+  background-color: #f5f7fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.statIcon {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+.tableDescription {
+  font-size: 13px;
+  color: #7f8c8d;
+  line-height: 1.4;
+}
+
+.selectedBadge,
+.relatedBadge {
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.selectedBadge {
+  background-color: #3498db;
+  color: white;
+}
+
+.relatedBadge {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.tableList {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.tableGroup {
+  margin-bottom: 12px;
+}
+
+.groupHeader {
+  padding: 8px 16px;
+  background-color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tableListItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #ecf0f1;
+  transition: background-color 0.2s;
+}
+
+.tableListItem:hover {
+  background-color: #f5f8fa;
+}
+
+.tableListItem.selected {
+  background-color: #ebf5fb;
+}
+
+.tableListItem.related {
+  background-color: #f5eefa;
+}
+
+.tableListName {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.tableListStats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 16px;
+}
+
+.tableListStats span {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.pkBadge,
+.fkBadge,
+.rowCountBadge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.pkBadge {
+  background-color: #f8e5ac;
+  color: #d4ac0d;
+}
+
+.fkBadge {
+  background-color: #d5e8fc;
+  color: #3498db;
+}
+
+.rowCountBadge {
+  background-color: #e8f5e9;
+  color: #2ecc71;
+}
+
+.tableBadgeWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.noTablesMessage {
+  padding: 32px;
+  text-align: center;
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.selectedTableInfo {
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #ecf0f1;
+}
+
+.selectedTableHeader {
+  margin-bottom: 12px;
+}
+
+.selectedTableHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.columnList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.columnItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background-color: white;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.columnIcon {
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+.columnName {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.columnType {
+  color: #3498db;
+  margin-right: 8px;
+}
+
+.nullableBadge {
+  background-color: #f1f1f1;
+  color: #95a5a6;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .tableGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .tableListStats {
+    flex-wrap: wrap;
+    margin-right: 8px;
+  }
+
+  .tableBadgeWrapper {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tableGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .searchContainer {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .viewControls {
+    justify-content: flex-end;
+  }
+
+  .tableListItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .tableListStats {
+    margin-right: 0;
+  }
+}

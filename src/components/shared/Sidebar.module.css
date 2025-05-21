@@ -1,0 +1,232 @@
+.sidebar {
+  width: 280px;
+  height: 100%;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+.sidebarHeader {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+}
+
+.searchContainer {
+  flex: 1;
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+}
+
+.collapseButton {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+  color: #718096;
+  transition: all 0.2s ease;
+}
+
+.collapseButton:hover {
+  background-color: #f7fafc;
+  color: #4a5568;
+}
+
+.collapseIcon {
+  font-size: 12px;
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.expandIcon {
+  font-size: 10px;
+  color: #718096;
+  transition: transform 0.2s ease;
+}
+
+.expanded {
+  transform: rotate(180deg);
+}
+
+.sectionContent {
+  padding: 12px 8px;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 16px;
+  background-color: #f7fafc;
+  border: 1px dashed #cbd5e0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4a5568;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: #edf2f7;
+  color: #3498db;
+  border-color: #3498db;
+}
+
+.createIcon {
+  font-size: 16px;
+  margin-right: 8px;
+  color: #718096;
+}
+
+.createButton:hover .createIcon {
+  color: #3498db;
+}
+
+.itemList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item:hover {
+  background-color: #f7fafc;
+}
+
+.active {
+  background-color: #ebf8ff;
+}
+
+.active .itemName {
+  color: #3498db;
+  font-weight: 500;
+}
+
+.itemIcon {
+  margin-right: 12px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemDetails {
+  flex: 1;
+  overflow: hidden;
+}
+
+.itemName {
+  font-size: 14px;
+  color: #2d3748;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: #a0aec0;
+  margin-top: 2px;
+}
+
+.statusIndicator {
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.connected {
+  color: #2ecc71;
+}
+
+.disconnected {
+  color: #95a5a6;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.emptyMessage {
+  padding: 16px;
+  text-align: center;
+  color: #a0aec0;
+  font-size: 14px;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateX(0);
+  }
+
+  .collapsed {
+    transform: translateX(-100%);
+  }
+}
