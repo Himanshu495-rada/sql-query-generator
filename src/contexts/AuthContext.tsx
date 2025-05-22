@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import authService from "../services/authService";
 
 interface User {
   id: string;
@@ -59,18 +60,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // In a real app, this would be an API call to validate the session token
-        const token = localStorage.getItem("authToken");
-
-        if (token) {
-          // Simulate fetching user data based on token
-          // In a real app, you'd make an API call to fetch user data
-          const userData = await simulateUserFetch(token);
+        // Use the auth service to check if user is authenticated
+        if (authService.isAuthenticated()) {
+          const userData = await authService.getCurrentUser();
           setUser(userData);
         }
       } catch (err) {
         console.error("Auth initialization error:", err);
-        localStorage.removeItem("authToken");
+        authService.logout();
       } finally {
         setIsLoading(false);
       }
@@ -79,51 +76,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  // Mock function to simulate fetching user data
-  const simulateUserFetch = async (token: string): Promise<User> => {
-    // This would be an API call in a real application
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Mock user data
-        const mockUser: User = {
-          id: "123",
-          name: "Demo User",
-          email: "demo@example.com",
-          avatarUrl: null,
-        };
-        resolve(mockUser);
-      }, 500);
-    });
-  };
-
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // In a real app, this would be an API call to your backend
       if (!email || !password) {
         throw new Error("Email and password are required");
       }
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock successful login - would be your API response in a real app
-      const mockUser: User = {
-        id: "123",
-        name: "Demo User",
-        email: email,
-        avatarUrl: null,
-      };
-
-      // Mock token - would come from your backend
-      const mockToken = "mock-auth-token";
-
-      // Store token in localStorage
-      localStorage.setItem("authToken", mockToken);
-      setUser(mockUser);
+      const userData = await authService.login({ 
+        email, 
+        password 
+      });
+      
+      setUser(userData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log in");
       throw err;
@@ -137,8 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
 
     try {
-      // In a real app, you might also make an API call to invalidate the token on the server
-      localStorage.removeItem("authToken");
+      await authService.logout();
       setUser(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log out");
@@ -153,28 +120,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Validate input
       if (!name || !email || !password) {
         throw new Error("Name, email, and password are required");
       }
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock successful signup - would be your API response in a real app
-      const mockUser: User = {
-        id: "123",
-        name: name,
-        email: email,
-        avatarUrl: null,
-      };
-
-      // Mock token - would come from your backend
-      const mockToken = "mock-auth-token";
-
-      // Store token in localStorage
-      localStorage.setItem("authToken", mockToken);
-      setUser(mockUser);
+      const userData = await authService.signup({
+        name,
+        email,
+        password
+      });
+      
+      setUser(userData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign up");
       throw err;
@@ -193,10 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error("Email is required");
       }
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, this would send a reset email to the user
+      await authService.resetPassword(email);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reset password");
       throw err;
@@ -215,11 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error("You must be logged in to update your profile");
       }
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update user data - would be your API response in a real app
-      const updatedUser = { ...user, ...data };
+      const updatedUser = await authService.updateProfile(data);
       setUser(updatedUser);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update profile");
@@ -242,14 +191,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error("Current password and new password are required");
       }
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, you would validate the current password and update to the new one
+      await authService.updatePassword(currentPassword, newPassword);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update password"
-      );
+      setError(err instanceof Error ? err.message : "Failed to update password");
       throw err;
     } finally {
       setIsLoading(false);
@@ -274,3 +218,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
+
+export { AuthContext };

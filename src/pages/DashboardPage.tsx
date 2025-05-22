@@ -8,6 +8,7 @@ import LoadingSpinner from "../components/shared/LoadingSpinner";
 import Modal, { ModalFooter } from "../components/shared/Modal";
 import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
+import api from "../utils/api";
 
 // Dashboard card types
 interface StatsCard {
@@ -39,114 +40,246 @@ interface RecentPlayground {
   queryCount: number;
 }
 
+interface PlaygroundData {
+  name: string;
+  connectionId: string; 
+  description?: string;
+  isPublic?: boolean;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: {
+    message: string;
+  };
+}
+
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const {
     connections,
     activeConnection,
     isLoading: isDatabaseLoading,
+    loadConnections,
   } = useDatabase();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaygroundName, setNewPlaygroundName] = useState("");
-  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
-    null
-  );
+  const [newPlaygroundDescription, setNewPlaygroundDescription] = useState("");
+  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingPlayground, setIsCreatingPlayground] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recentPlaygrounds, setRecentPlaygrounds] = useState<RecentPlayground[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [stats, setStats] = useState<StatsCard[]>([]);
 
   const navigate = useNavigate();
 
-  // Stats for the statistics cards
-  const stats: StatsCard[] = [
-    {
-      title: "Total Queries Run",
-      value: 587,
-      icon: "📊",
-      change: { value: "12% increase", isPositive: true },
-    },
-    {
-      title: "Active Playgrounds",
-      value: 8,
-      icon: "🧩",
-      change: { value: "3 new this week", isPositive: true },
-    },
-    {
-      title: "Connected Databases",
-      value: connections.length,
-      icon: "🗄️",
-      change: { value: "2 new connections", isPositive: true },
-    },
-    {
-      title: "SQL Generation Uses",
-      value: 142,
-      icon: "🤖",
-      change: { value: "5% decrease", isPositive: false },
-    },
-  ];
+  // Fetch dashboard data on mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Load connections if not already loaded
+        await loadConnections();
+        
+        // Fetch recent playgrounds
+        const playgroundsResponse = await api.get<{ playgrounds: any[] }>('playgrounds/recent');
+        
+        if (playgroundsResponse && playgroundsResponse.playgrounds) {
+          const formattedPlaygrounds = playgroundsResponse.playgrounds.map(pg => ({
+            id: pg.id,
+            name: pg.name,
+            lastUsed: new Date(pg.updatedAt || pg.createdAt),
+            databaseName: pg.connection?.name || "Unknown Database",
+            queryCount: pg.queryCount || 0
+          }));
+          
+          setRecentPlaygrounds(formattedPlaygrounds);
+        } else {
+          // If no data, set empty array
+          setRecentPlaygrounds([]);
+        }
+        
+        // Fetch user activity
+        const activityResponse = await api.get<{ activities: any[] }>('user/activities');
+        
+        if (activityResponse && activityResponse.activities) {
+          const formattedActivities = activityResponse.activities.map(activity => ({
+            id: activity.id,
+            action: activity.action,
+            target: activity.target,
+            timestamp: new Date(activity.createdAt),
+            user: activity.user ? {
+              name: activity.user.name,
+              avatarUrl: activity.user.avatarUrl
+            } : undefined
+          }));
+          
+          setRecentActivity(formattedActivities);
+        } else {
+          // Sample activity if API doesn't return data
+          const sampleActivity: ActivityItem[] = [
+            {
+              id: "1",
+              action: "logged in",
+              target: "to the application",
+              timestamp: new Date(),
+              user: user ? { 
+                name: user.name, 
+                avatarUrl: user.avatarUrl || undefined 
+              } : undefined,
+            }
+          ];
+          setRecentActivity(sampleActivity);
+        }
+        
+        // Fetch dashboard stats
+        const statsResponse = await api.get<{ stats: any }>('dashboard/stats');
+        
+        if (statsResponse && statsResponse.stats) {
+          const dashboardStats = [
+            {
+              title: "Total Queries Run",
+              value: statsResponse.stats.totalQueries || 0,
+              icon: "📊",
+              change: { 
+                value: statsResponse.stats.queriesChange || "0%", 
+                isPositive: (statsResponse.stats.queriesChangePositive !== undefined) 
+                  ? statsResponse.stats.queriesChangePositive 
+                  : true 
+              },
+            },
+            {
+              title: "Active Playgrounds",
+              value: statsResponse.stats.activePlaygrounds || 0,
+              icon: "🧩",
+              change: { 
+                value: statsResponse.stats.playgroundsChange || "0", 
+                isPositive: (statsResponse.stats.playgroundsChangePositive !== undefined)
+                  ? statsResponse.stats.playgroundsChangePositive
+                  : true
+              },
+            },
+            {
+              title: "Connected Databases",
+              value: connections.length,
+              icon: "🗄️",
+              change: { 
+                value: statsResponse.stats.connectionsChange || "0", 
+                isPositive: (statsResponse.stats.connectionsChangePositive !== undefined)
+                  ? statsResponse.stats.connectionsChangePositive
+                  : true
+              },
+            },
+            {
+              title: "SQL Generation Uses",
+              value: statsResponse.stats.generationUses || 0,
+              icon: "🤖",
+              change: { 
+                value: statsResponse.stats.generationChange || "0%", 
+                isPositive: (statsResponse.stats.generationChangePositive !== undefined)
+                  ? statsResponse.stats.generationChangePositive
+                  : true
+              },
+            },
+          ];
+          
+          setStats(dashboardStats);
+        } else {
+          // Default stats if API doesn't return data
+          setStats([
+            {
+              title: "Total Queries Run",
+              value: 0,
+              icon: "📊",
+              change: { value: "0% increase", isPositive: true },
+            },
+            {
+              title: "Active Playgrounds",
+              value: recentPlaygrounds.length,
+              icon: "🧩",
+              change: { value: "0 new", isPositive: true },
+            },
+            {
+              title: "Connected Databases",
+              value: connections.length,
+              icon: "🗄️",
+              change: { value: "0 new connections", isPositive: true },
+            },
+            {
+              title: "SQL Generation Uses",
+              value: 0,
+              icon: "🤖",
+              change: { value: "0% change", isPositive: true },
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+        
+        // Set default data if API fails
+        setRecentPlaygrounds([]);
+        setRecentActivity([]);
+        setStats([
+          {
+            title: "Total Queries Run",
+            value: 0,
+            icon: "📊",
+            change: { value: "0% increase", isPositive: true },
+          },
+          {
+            title: "Active Playgrounds",
+            value: 0,
+            icon: "🧩",
+            change: { value: "0 new", isPositive: true },
+          },
+          {
+            title: "Connected Databases",
+            value: connections.length,
+            icon: "🗄️",
+            change: { value: "0 new connections", isPositive: true },
+          },
+          {
+            title: "SQL Generation Uses",
+            value: 0,
+            icon: "🤖",
+            change: { value: "0% change", isPositive: true },
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Recent user activity
-  const recentActivity: ActivityItem[] = [
-    {
-      id: "1",
-      action: "executed query",
-      target: "SELECT * FROM users",
-      timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-      user: user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined,
-    },
-    {
-      id: "2",
-      action: "created playground",
-      target: "Customer Analysis",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      user: user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined,
-    },
-    {
-      id: "3",
-      action: "connected database",
-      target: "Product Database",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-      user: user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined,
-    },
-    {
-      id: "4",
-      action: "generated SQL",
-      target: "Show all orders with total value > $100",
-      timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-      user: user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined,
-    },
-  ];
+    fetchDashboardData();
+  }, [loadConnections, user]);
 
-  // Recent playgrounds
-  const recentPlaygrounds: RecentPlayground[] = [
-    {
-      id: "pg1",
-      name: "Sales Analysis",
-      lastUsed: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-      databaseName: "Sales DB",
-      queryCount: 15,
-    },
-    {
-      id: "pg2",
-      name: "Customer Segmentation",
-      lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-      databaseName: "Marketing DB",
-      queryCount: 8,
-    },
-    {
-      id: "pg3",
-      name: "Inventory Report",
-      lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      databaseName: "Inventory DB",
-      queryCount: 12,
-    },
-    {
-      id: "pg4",
-      name: "User Analytics",
-      lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-      databaseName: "User DB",
-      queryCount: 7,
-    },
-  ];
+  // Initialize selected database when connections load
+  useEffect(() => {
+    if (connections && connections.length > 0 && !selectedDatabaseId) {
+      setSelectedDatabaseId(connections[0].id);
+    }
+  }, [connections, selectedDatabaseId]);
 
-  // Sample database schemas
+  // Format the relative time for display (e.g. "5 minutes ago")
+  const formatRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  };
+
+  // Sample queries for the UI
   const sampleQueries = [
     {
       name: "Find recent orders",
@@ -173,79 +306,101 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
-  // Initialize selected database when connections load
-  useEffect(() => {
-    if (connections.length > 0 && !selectedDatabaseId) {
-      setSelectedDatabaseId(connections[0].id);
-    }
-  }, [connections, selectedDatabaseId]);
-
-  // Format the relative time for display (e.g. "5 minutes ago")
-  const formatRelativeTime = (date: Date): string => {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  };
-
   // Handle creating a new playground
-  const handleCreatePlayground = () => {
+  const handleCreatePlayground = async () => {
     if (!newPlaygroundName.trim()) {
       alert("Please enter a playground name");
       return;
     }
 
-    // In a real app, this would create the playground and redirect to it
-    console.log(
-      `Creating playground: ${newPlaygroundName} with database: ${selectedDatabaseId}`
-    );
-    setIsCreateModalOpen(false);
-    setNewPlaygroundName("");
+    if (!selectedDatabaseId) {
+      alert("Please select a database connection");
+      return;
+    }
+
+    setIsCreatingPlayground(true);
+
+    try {
+      const playgroundData: PlaygroundData = {
+        name: newPlaygroundName.trim(),
+        connectionId: selectedDatabaseId,
+        description: newPlaygroundDescription.trim() || undefined
+      };
+
+      // Create the playground
+      const response = await api.post<{ playground: { id: string } }>('playgrounds', playgroundData);
+
+      // Navigate to the new playground
+      if (response && response.playground && response.playground.id) {
+        navigate(`/playground/${response.playground.id}`);
+      } else {
+        throw new Error("Failed to create playground");
+      }
+    } catch (err) {
+      console.error("Error creating playground:", err);
+      alert(err instanceof Error ? err.message : "Failed to create playground");
+    } finally {
+      setIsCreatingPlayground(false);
+      setIsCreateModalOpen(false);
+      setNewPlaygroundName("");
+      setNewPlaygroundDescription("");
+    }
+  };
+
+  // Handle navigating to database connection page
+  const handleConnectDatabase = () => {
+    navigate('/databases');
+  };
+
+  // Handle selecting a playground
+  const handlePlaygroundClick = (id: string) => {
+    navigate(`/playground/${id}`);
+  };
+
+  // Handle selecting a database
+  const handleDatabaseClick = (id: string) => {
+    setSelectedDatabaseId(id);
   };
 
   // Handle sidebar toggle (mobile view)
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
+  const isPageLoading = isLoading || isDatabaseLoading;
+
   return (
     <div className={styles.dashboardPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={user ? { name: user.name, avatarUrl: user.avatarUrl || undefined } : undefined}
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
+        appName="Dashboard"
         onCreatePlayground={() => setIsCreateModalOpen(true)}
-        onDatabaseConnect={() => console.log("Connect database")}
+        onDatabaseConnect={handleConnectDatabase}
       />
 
       <div className={styles.mainContainer}>
         {isSidebarVisible && (
           <Sidebar
             isVisible={isSidebarVisible}
-            playgrounds={recentPlaygrounds.map((pg) => ({
+            playgrounds={(recentPlaygrounds || []).map((pg) => ({
               id: pg.id,
               name: pg.name,
               lastUpdated: pg.lastUsed,
             }))}
-            databases={connections.map((conn) => ({
+            databases={(connections || []).map((conn) => ({
               id: conn.id,
               name: conn.name,
               status: conn.status,
             }))}
-            onPlaygroundClick={(id) =>
-              console.log("Navigate to playground", id)
-            }
+            onPlaygroundClick={handlePlaygroundClick}
             onCreatePlayground={() => setIsCreateModalOpen(true)}
-            onDatabaseClick={(id) => console.log("Set active database", id)}
-            onConnectDatabase={() => console.log("Connect database")}
+            onDatabaseClick={handleDatabaseClick}
+            onConnectDatabase={handleConnectDatabase}
             onCollapse={() => setIsSidebarVisible(false)}
           />
         )}
 
-        {isDatabaseLoading ? (
+        {isPageLoading ? (
           <div className={styles.loadingContainer}>
             <LoadingSpinner
               size="large"
@@ -258,6 +413,7 @@ const DashboardPage: React.FC = () => {
             <div className={styles.welcomeSection}>
               <h1>Welcome back, {user ? user.name.split(" ")[0] : "User"}</h1>
               <p>Here's what's happening with your SQL projects</p>
+              {error && <div className={styles.errorMessage}>{error}</div>}
             </div>
 
             <div className={styles.statsSection}>
@@ -291,37 +447,41 @@ const DashboardPage: React.FC = () => {
                   </Button>
                 </div>
                 <div className={styles.activityList}>
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className={styles.activityItem}>
-                      <div className={styles.activityUser}>
-                        {activity.user?.avatarUrl ? (
-                          <img
-                            src={activity.user.avatarUrl}
-                            alt={activity.user.name}
-                            className={styles.userAvatar}
-                          />
-                        ) : (
-                          <div className={styles.userAvatarPlaceholder}>
-                            {activity.user?.name?.charAt(0) || "U"}
+                  {recentActivity.length === 0 ? (
+                    <div className={styles.emptyState}>No recent activity</div>
+                  ) : (
+                    recentActivity.map((activity) => (
+                      <div key={activity.id} className={styles.activityItem}>
+                        <div className={styles.activityUser}>
+                          {activity.user?.avatarUrl ? (
+                            <img
+                              src={activity.user.avatarUrl}
+                              alt={activity.user.name}
+                              className={styles.userAvatar}
+                            />
+                          ) : (
+                            <div className={styles.userAvatarPlaceholder}>
+                              {activity.user?.name?.charAt(0) || "U"}
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.activityDetails}>
+                          <div className={styles.activityText}>
+                            <span className={styles.bold}>
+                              {activity.user?.name || "You"}
+                            </span>{" "}
+                            {activity.action}{" "}
+                            <span className={styles.activityTarget}>
+                              {activity.target}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                      <div className={styles.activityDetails}>
-                        <div className={styles.activityText}>
-                          <span className={styles.bold}>
-                            {activity.user?.name || "You"}
-                          </span>{" "}
-                          {activity.action}{" "}
-                          <span className={styles.activityTarget}>
-                            {activity.target}
-                          </span>
-                        </div>
-                        <div className={styles.activityTime}>
-                          {formatRelativeTime(activity.timestamp)}
+                          <div className={styles.activityTime}>
+                            {formatRelativeTime(activity.timestamp)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -338,32 +498,44 @@ const DashboardPage: React.FC = () => {
                   </Button>
                 </div>
                 <div className={styles.playgroundsList}>
-                  {recentPlaygrounds.map((playground) => (
-                    <div key={playground.id} className={styles.playgroundCard}>
-                      <div className={styles.playgroundIcon}>📊</div>
-                      <div className={styles.playgroundInfo}>
-                        <h3>{playground.name}</h3>
-                        <div className={styles.playgroundDetails}>
-                          <span className={styles.playgroundDatabase}>
-                            {playground.databaseName}
-                          </span>
-                          <span className={styles.playgroundQueries}>
-                            {playground.queryCount} queries
-                          </span>
-                          <span className={styles.playgroundTime}>
-                            {formatRelativeTime(playground.lastUsed)}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        size="small"
-                        onClick={() => navigate(`/playground/${playground.id}`)}
+                  {recentPlaygrounds.length === 0 ? (
+                    <div className={styles.emptyState}>
+                      <p>You don't have any playgrounds yet.</p>
+                      <Button 
+                        variant="primary" 
+                        onClick={() => setIsCreateModalOpen(true)}
                       >
-                        Open
+                        Create Your First Playground
                       </Button>
                     </div>
-                  ))}
+                  ) : (
+                    recentPlaygrounds.map((playground) => (
+                      <div key={playground.id} className={styles.playgroundCard}>
+                        <div className={styles.playgroundIcon}>📊</div>
+                        <div className={styles.playgroundInfo}>
+                          <h3>{playground.name}</h3>
+                          <div className={styles.playgroundDetails}>
+                            <span className={styles.playgroundDatabase}>
+                              {playground.databaseName}
+                            </span>
+                            <span className={styles.playgroundQueries}>
+                              {playground.queryCount} queries
+                            </span>
+                            <span className={styles.playgroundTime}>
+                              {formatRelativeTime(playground.lastUsed)}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          onClick={() => navigate(`/playground/${playground.id}`)}
+                        >
+                          Open
+                        </Button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -388,19 +560,20 @@ const DashboardPage: React.FC = () => {
                         <Button
                           variant="secondary"
                           size="small"
-                          onClick={() => console.log("Copy query", item.query)}
+                          onClick={() => {
+                            navigator.clipboard.writeText(item.query);
+                            alert("Query copied to clipboard");
+                          }}
                         >
                           Copy
                         </Button>
                         <Button
                           variant="primary"
                           size="small"
-                          onClick={() =>
-                            console.log(
-                              "Create playground with query",
-                              item.query
-                            )
-                          }
+                          onClick={() => {
+                            setNewPlaygroundName(item.name);
+                            setIsCreateModalOpen(true);
+                          }}
                         >
                           Use in Playground
                         </Button>
@@ -426,13 +599,14 @@ const DashboardPage: React.FC = () => {
             confirmText="Create"
             onCancel={() => setIsCreateModalOpen(false)}
             onConfirm={handleCreatePlayground}
-            confirmDisabled={!newPlaygroundName.trim()}
+            confirmDisabled={!newPlaygroundName.trim() || !selectedDatabaseId || isCreatingPlayground}
+            isConfirmLoading={isCreatingPlayground}
           />
         }
       >
         <div className={styles.createPlaygroundForm}>
           <div className={styles.formGroup}>
-            <label htmlFor="playground-name">Playground Name</label>
+            <label htmlFor="playground-name">Playground Name*</label>
             <input
               type="text"
               id="playground-name"
@@ -443,7 +617,17 @@ const DashboardPage: React.FC = () => {
             />
           </div>
           <div className={styles.formGroup}>
-            <label htmlFor="database-select">Database Connection</label>
+            <label htmlFor="playground-description">Description (optional)</label>
+            <input
+              type="text"
+              id="playground-description"
+              value={newPlaygroundDescription}
+              onChange={(e) => setNewPlaygroundDescription(e.target.value)}
+              placeholder="Describe your playground"
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="database-select">Database Connection*</label>
             <select
               id="database-select"
               value={selectedDatabaseId || ""}
@@ -452,7 +636,7 @@ const DashboardPage: React.FC = () => {
               <option value="" disabled>
                 Select a database
               </option>
-              {connections.map((connection) => (
+              {(connections || []).map((connection) => (
                 <option key={connection.id} value={connection.id}>
                   {connection.name}{" "}
                   {connection.status !== "connected"
@@ -460,15 +644,23 @@ const DashboardPage: React.FC = () => {
                     : ""}
                 </option>
               ))}
-              {connections.length === 0 && (
+              {(!connections || connections.length === 0) && (
                 <option value="" disabled>
                   No databases connected
                 </option>
               )}
             </select>
-            {connections.length === 0 && (
+            {(!connections || connections.length === 0) && (
               <div className={styles.formNote}>
                 You need to connect a database first.
+                <Button 
+                  variant="outline" 
+                  size="small" 
+                  onClick={handleConnectDatabase}
+                  style={{marginLeft: '8px'}}
+                >
+                  Connect Database
+                </Button>
               </div>
             )}
           </div>

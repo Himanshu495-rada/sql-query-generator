@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./DatabaseConnectionPage.module.css";
 import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
@@ -8,6 +8,14 @@ import { useAuth } from "../contexts/AuthContext";
 import { useDatabase } from "../contexts/DatabaseContext";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import Modal, { ModalFooter } from "../components/shared/Modal";
+import api from "../utils/api";
+import { ConnectionData } from "../components/database/ConnectionForm";
+import { DatabaseType } from "../contexts/DatabaseContext";
+
+// Define the response shape for connections API
+interface ConnectionsResponse {
+  connections: Array<any>;
+}
 
 const DatabaseConnectionPage: React.FC = () => {
   const { user } = useAuth();
@@ -17,8 +25,11 @@ const DatabaseConnectionPage: React.FC = () => {
     disconnectDatabase,
     isLoading,
     error,
-    loadTrialDatabase,
+    loadSampleDatabase,
     deleteConnection,
+    activeConnection,
+    refreshSchema,
+    loadConnections,
   } = useDatabase();
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -31,44 +42,63 @@ const DatabaseConnectionPage: React.FC = () => {
     null
   );
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [localConnections, setLocalConnections] = useState<any[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
 
-  // Sample playgrounds data for sidebar
-  const samplePlaygrounds = [
-    {
-      id: "pg1",
-      name: "Sales Analysis",
-      lastUpdated: new Date(),
-      isActive: true,
-    },
-    {
-      id: "pg2",
-      name: "User Demographics",
-      lastUpdated: new Date(Date.now() - 86400000),
-    },
-    {
-      id: "pg3",
-      name: "Inventory Report",
-      lastUpdated: new Date(Date.now() - 172800000),
-    },
-  ];
+  // Fetch connections on mount
+  useEffect(() => {
+    const fetchConnections = async () => {
+      setLocalLoading(true);
+      try {
+        await loadConnections();
+        
+        if (!connections || connections.length === 0) {
+          const fetchedConnections = await api.get<ConnectionsResponse>('/connections');
+          setLocalConnections(fetchedConnections.connections || []);
+        }
+      } catch (error) {
+        console.error("Error fetching connections:", error);
+      } finally {
+        setLocalLoading(false);
+      }
+    };
+
+    fetchConnections();
+  }, [loadConnections]);
 
   // Handle database connection
-  const handleConnect = async (connectionData: any) => {
+  const handleConnect = async (connectionData: ConnectionData) => {
     try {
-      await connectToDatabase(connectionData);
+      // Convert form data to expected format
+      const params = {
+        name: connectionData.name,
+        type: connectionData.type as DatabaseType,
+        host: connectionData.host,
+        port: connectionData.port ? Number(connectionData.port) : undefined,
+        username: connectionData.username,
+        password: connectionData.password,
+        database: connectionData.database,
+        file: connectionData.file,
+        createSandbox: connectionData.createSandbox
+      };
+      
+      await connectToDatabase(params);
+      
+      // After successful connection, refresh connections list
+      await loadConnections();
     } catch (err) {
       console.error("Connection error:", err);
-      // Error is already handled by the context
     }
   };
 
-  // Handle trial database selection
+  // Handle sample database selection
   const handleSelectTrial = async (databaseId: string) => {
     try {
-      await loadTrialDatabase(databaseId);
+      await loadSampleDatabase(databaseId);
+      
+      await loadConnections();
     } catch (err) {
-      console.error("Trial database loading error:", err);
-      // Error is already handled by the context
+      console.error("Sample database loading error:", err);
     }
   };
 
@@ -76,16 +106,24 @@ const DatabaseConnectionPage: React.FC = () => {
   const handleDisconnect = async (databaseId: string) => {
     try {
       await disconnectDatabase(databaseId);
+      
+      await loadConnections();
     } catch (err) {
       console.error("Disconnection error:", err);
-      // Error is already handled by the context
     }
   };
 
-  // Open schema viewer modal
-  const handleViewSchema = (databaseId: string) => {
-    setSelectedConnection(databaseId);
-    setIsViewSchemaModalOpen(true);
+  // Handle view schema
+  const handleViewSchema = async (databaseId: string) => {
+    try {
+      setSelectedConnection(databaseId);
+      
+      await refreshSchema();
+      
+      setIsViewSchemaModalOpen(true);
+    } catch (err) {
+      console.error("Error refreshing schema:", err);
+    }
   };
 
   // Confirm database deletion
@@ -97,37 +135,59 @@ const DatabaseConnectionPage: React.FC = () => {
       await deleteConnection(connectionToDelete);
       setIsDeleteModalOpen(false);
       setConnectionToDelete(null);
+      
+      await loadConnections();
     } catch (err) {
       console.error("Delete error:", err);
-      // Error is already handled by the context
     } finally {
       setIsDeleteLoading(false);
     }
   };
 
+  // Get active connection schema
+  const getConnectionSchema = () => {
+    if (!selectedConnection) return null;
+    
+    const connection = connections?.find(c => c.id === selectedConnection);
+    return connection?.schema || null;
+  };
+
+  // Use connections from context if available, otherwise use local state
+  const displayedConnections = Array.isArray(connections) && connections.length > 0 
+    ? connections 
+    : (Array.isArray(localConnections) ? localConnections : []);
+    
+  const isLoadingConnections = isLoading || localLoading;
+
+  // Format user data for Navbar
+  const formattedUser = user ? {
+    name: user.name,
+    avatarUrl: user.avatarUrl || undefined
+  } : undefined;
+
   return (
     <div className={styles.databaseConnectionPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={formattedUser}
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         appName="Database Connections"
       />
 
       <div className={styles.mainContainer}>
-        {isSidebarVisible && (
+        {isSidebarVisible && displayedConnections && (
           <Sidebar
             isVisible={isSidebarVisible}
-            playgrounds={samplePlaygrounds}
-            databases={connections.map((conn) => ({
-              id: conn.id,
-              name: conn.name,
-              status: conn.status,
+            playgrounds={[]} 
+            databases={(displayedConnections || []).map((conn) => ({
+              id: conn?.id || 'unknown',
+              name: conn?.name || 'Unknown Connection',
+              status: conn?.status || "connected",
             }))}
             onPlaygroundClick={() => {}}
             onCreatePlayground={() => {}}
             onDatabaseClick={() => {}}
-            onConnectDatabase={() => {}}
+            onConnectDatabase={() => setIsSidebarVisible(false)}
             onCollapse={() => setIsSidebarVisible(false)}
           />
         )}
@@ -136,12 +196,12 @@ const DatabaseConnectionPage: React.FC = () => {
           <div className={styles.header}>
             <h1>Database Connections</h1>
             <p>
-              Connect to your databases or use our trial databases to test the
+              Connect to your databases or use our sample databases to test the
               application.
             </p>
           </div>
 
-          {isLoading && !connections.length ? (
+          {isLoadingConnections && (!displayedConnections || displayedConnections.length === 0) ? (
             <div className={styles.loadingContainer}>
               <LoadingSpinner
                 size="large"
@@ -163,16 +223,26 @@ const DatabaseConnectionPage: React.FC = () => {
                 <h2>Your Connections</h2>
                 {error && <div className={styles.errorMessage}>{error}</div>}
 
-                <DatabaseList
-                  databases={connections}
-                  onConnect={handleDisconnect} // This actually toggles connection
-                  onDisconnect={handleDisconnect}
-                  onViewSchema={handleViewSchema}
-                  onDelete={(id) => {
-                    setConnectionToDelete(id);
-                    setIsDeleteModalOpen(true);
-                  }}
-                />
+                {!displayedConnections || displayedConnections.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>You don't have any database connections yet.</p>
+                    <p>
+                      Connect to a database using the form above or try one of our
+                      sample databases.
+                    </p>
+                  </div>
+                ) : (
+                  <DatabaseList
+                    databases={displayedConnections}
+                    onConnect={handleDisconnect}
+                    onDisconnect={handleDisconnect}
+                    onViewSchema={handleViewSchema}
+                    onDelete={(id) => {
+                      setConnectionToDelete(id);
+                      setIsDeleteModalOpen(true);
+                    }}
+                  />
+                )}
               </section>
             </div>
           )}
@@ -217,9 +287,29 @@ const DatabaseConnectionPage: React.FC = () => {
         <div className={styles.schemaModalContent}>
           {selectedConnection && (
             <div>
-              {/* In a real application, you would render the SchemaViewer component here */}
-              <p>Schema viewer for database would be displayed here.</p>
-              <p>Connection ID: {selectedConnection}</p>
+              {getConnectionSchema() ? (
+                <div className={styles.schemaViewer}>
+                  <h3>Tables</h3>
+                  <ul className={styles.tableList}>
+                    {getConnectionSchema()?.tables?.map(table => (
+                      <li key={table.name} className={styles.tableItem}>
+                        <strong>{table.name}</strong>
+                        <ul className={styles.columnList}>
+                          {table.columns?.map(column => (
+                            <li key={column.name} className={styles.columnItem}>
+                              {column.name} ({column.type})
+                              {column.isPrimaryKey && ' 🔑'}
+                              {column.isForeignKey && ' 🔗'}
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p>Loading schema or no schema available for this connection.</p>
+              )}
             </div>
           )}
         </div>

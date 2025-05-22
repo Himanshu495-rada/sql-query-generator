@@ -4,10 +4,12 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DatabaseProvider } from "./contexts/DatabaseContext";
+import authService from "./services/authService";
 
 // Pages
 import LoginPage from "./pages/LoginPage";
@@ -29,10 +31,27 @@ import "./App.css";
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const isAuthenticated = localStorage.getItem("authToken") !== null;
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="route-loader">
+        <LoadingSpinner size="medium" color="primary" />
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated, and save the intended destination
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return (
+      <Navigate 
+        to="/login" 
+        state={{ from: location.pathname + location.search }} 
+        replace 
+      />
+    );
   }
 
   return <>{children}</>;
@@ -42,12 +61,21 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial app loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    // Check for valid token and preload user data if possible
+    const initializeAuth = async () => {
+      try {
+        if (authService.isAuthenticated()) {
+          await authService.getCurrentUser();
+        }
+      } catch (error) {
+        // Token invalid or expired, it will be cleared by the authService
+        console.error("Auth initialization error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initializeAuth();
   }, []);
 
   if (isLoading) {

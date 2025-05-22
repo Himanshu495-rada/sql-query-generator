@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "../utils/api";
 
 // Define types for authentication
 interface LoginCredentials {
@@ -20,13 +21,15 @@ interface User {
 }
 
 interface AuthResponse {
-  user: User;
-  token: string;
+  success: boolean;
+  data: {
+    user: User;
+    token: string;
+  };
 }
 
-// API base URL - in a real app, this would be in an environment variable
-const API_URL =
-  process.env.REACT_APP_API_URL || "https://api.sqlquerygenerator.com";
+// API base URL - use the same value from window.__ENV__ that api.ts uses
+const API_URL = window.__ENV__?.REACT_APP_API_URL || "http://localhost:3000/api";
 
 /**
  * Authentication service for handling user authentication operations
@@ -37,30 +40,19 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<User> {
     try {
-      // For development/demo purposes, simulate a successful login
-      if (process.env.NODE_ENV === "development") {
-        const mockUser: User = {
-          id: "123",
-          name: "Demo User",
-          email: credentials.email,
-          avatarUrl: null,
-        };
-
-        // Store auth token in localStorage
-        localStorage.setItem("authToken", "mock-auth-token");
-        return mockUser;
-      }
-
-      // In production, make an actual API call
       const response = await axios.post<AuthResponse>(
         `${API_URL}/auth/login`,
         credentials
       );
 
-      // Store auth token in localStorage
-      localStorage.setItem("authToken", response.data.token);
+      if (!response.data.success) {
+        throw new Error("Login failed");
+      }
 
-      return response.data.user;
+      // Store auth token in localStorage
+      localStorage.setItem("authToken", response.data.data.token);
+
+      return response.data.data.user;
     } catch (error: any) {
       // Handle common error cases with user-friendly messages
       if (error.response) {
@@ -71,7 +63,7 @@ class AuthService {
             throw new Error("Account is locked. Please contact support");
           default:
             throw new Error(
-              `Login failed: ${error.response.data.message || "Unknown error"}`
+              `Login failed: ${error.response.data.error?.message || "Unknown error"}`
             );
         }
       }
@@ -87,30 +79,19 @@ class AuthService {
    */
   async signup(data: SignupData): Promise<User> {
     try {
-      // For development/demo purposes, simulate a successful signup
-      if (process.env.NODE_ENV === "development") {
-        const mockUser: User = {
-          id: "123",
-          name: data.name,
-          email: data.email,
-          avatarUrl: null,
-        };
-
-        // Store auth token in localStorage
-        localStorage.setItem("authToken", "mock-auth-token");
-        return mockUser;
-      }
-
-      // In production, make an actual API call
       const response = await axios.post<AuthResponse>(
-        `${API_URL}/auth/signup`,
+        `${API_URL}/auth/register`,
         data
       );
 
-      // Store auth token in localStorage
-      localStorage.setItem("authToken", response.data.token);
+      if (!response.data.success) {
+        throw new Error("Registration failed");
+      }
 
-      return response.data.user;
+      // Store auth token in localStorage
+      localStorage.setItem("authToken", response.data.data.token);
+
+      return response.data.data.user;
     } catch (error: any) {
       // Handle common error cases with user-friendly messages
       if (error.response) {
@@ -120,13 +101,13 @@ class AuthService {
           case 400:
             throw new Error(
               `Registration failed: ${
-                error.response.data.message || "Invalid data"
+                error.response.data.error?.message || "Invalid data"
               }`
             );
           default:
             throw new Error(
               `Registration failed: ${
-                error.response.data.message || "Unknown error"
+                error.response.data.error?.message || "Unknown error"
               }`
             );
         }
@@ -141,8 +122,26 @@ class AuthService {
   /**
    * Logs out the current user
    */
-  logout(): void {
-    localStorage.removeItem("authToken");
+  async logout(): Promise<void> {
+    try {
+      const token = localStorage.getItem("authToken");
+      
+      if (token) {
+        await axios.post(
+          `${API_URL}/auth/logout`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("authToken");
+    }
   }
 
   /**
@@ -163,24 +162,8 @@ class AuthService {
         return null;
       }
 
-      // For development/demo purposes, return a mock user
-      if (process.env.NODE_ENV === "development") {
-        return {
-          id: "123",
-          name: "Demo User",
-          email: "demo@example.com",
-          avatarUrl: null,
-        };
-      }
-
-      // In production, make an actual API call
-      const response = await axios.get<User>(`${API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data;
+      const response = await api.get<{ user: User }>('auth/me');
+      return response.user;
     } catch (error) {
       // If there's an error, clear the token and return null
       localStorage.removeItem("authToken");
@@ -193,42 +176,13 @@ class AuthService {
    */
   async updateProfile(data: Partial<User>): Promise<User> {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
-      // For development/demo purposes, return updated mock user
-      if (process.env.NODE_ENV === "development") {
-        return {
-          id: "123",
-          name: data.name || "Demo User",
-          email: data.email || "demo@example.com",
-          avatarUrl: data.avatarUrl || null,
-        };
-      }
-
-      // In production, make an actual API call
-      const response = await axios.put<User>(`${API_URL}/auth/profile`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data;
+      const response = await api.put<{ user: User }>('users/profile', data);
+      return response.user;
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(
-          `Failed to update profile: ${
-            error.response.data.message || "Unknown error"
-          }`
-        );
+      if (error instanceof Error) {
+        throw error;
       }
-
-      throw new Error(
-        "Network error. Please check your connection and try again."
-      );
+      throw new Error("Failed to update profile");
     }
   }
 
@@ -240,63 +194,29 @@ class AuthService {
     newPassword: string
   ): Promise<void> {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
-      // For development/demo purposes, do nothing
-      if (process.env.NODE_ENV === "development") {
-        return;
-      }
-
-      // In production, make an actual API call
-      await axios.put(
-        `${API_URL}/auth/password`,
-        { currentPassword, newPassword },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put('users/change-password', {
+        currentPassword,
+        newPassword,
+      });
     } catch (error: any) {
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            throw new Error("Current password is incorrect");
-          default:
-            throw new Error(
-              `Failed to update password: ${
-                error.response.data.message || "Unknown error"
-              }`
-            );
-        }
+      if (error instanceof Error) {
+        throw error;
       }
-
-      throw new Error(
-        "Network error. Please check your connection and try again."
-      );
+      throw new Error("Failed to update password");
     }
   }
 
   /**
-   * Sends a password reset email
+   * Initiates password reset flow
    */
   async resetPassword(email: string): Promise<void> {
     try {
-      // For development/demo purposes, do nothing
-      if (process.env.NODE_ENV === "development") {
-        return;
-      }
-
-      // In production, make an actual API call
-      await axios.post(`${API_URL}/auth/reset-password`, { email });
+      await api.post('auth/forgot-password', { email });
     } catch (error: any) {
-      // Even if the email doesn't exist, we don't want to reveal that for security reasons
-      // So we just silently return instead of throwing an error
-      console.error("Error sending password reset email", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to reset password");
     }
   }
 }
