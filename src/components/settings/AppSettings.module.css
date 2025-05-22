@@ -7,16 +7,16 @@
 .sectionTitle {
   font-size: 24px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
   margin: 0 0 24px 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .settingsSection {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
   margin-bottom: 32px;
 }
@@ -24,12 +24,12 @@
 .sectionSubtitle {
   font-size: 18px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
   margin: 0 0 12px 0;
 }
 
 .sectionDescription {
-  color: #718096;
+  color: var(--color-text-secondary);
   margin: 0 0 24px 0;
   line-height: 1.5;
   font-size: 14px;
@@ -51,7 +51,7 @@
   width: 120px;
   height: 120px;
   border-radius: 8px;
-  border: 2px solid #edf2f7;
+  border: 2px solid var(--color-border);
   overflow: hidden;
   cursor: pointer;
   position: relative;
@@ -59,15 +59,14 @@
 }
 
 .themeOption:hover {
-  border-color: #cbd5e0;
+  border-color: var(--color-border);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
 }
 
 .selectedTheme {
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .themeOption input {
@@ -106,7 +105,7 @@
 
 .formGroup label {
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -115,11 +114,11 @@
 
 .select {
   padding: 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 15px;
   transition: border-color 0.2s;
-  background-color: white;
+  background-color: var(--color-surface);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -130,8 +129,8 @@
 
 .select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .toggleWrapper {
@@ -160,7 +159,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #cbd5e0;
+  background-color: var(--color-border);
   transition: 0.4s;
   border-radius: 34px;
 }
@@ -172,17 +171,17 @@
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: var(--color-surface);
   transition: 0.4s;
   border-radius: 50%;
 }
 
 .toggleSwitch input:checked + .toggleSlider {
-  background-color: #3498db;
+  background-color: var(--color-primary);
 }
 
 .toggleSwitch input:focus + .toggleSlider {
-  box-shadow: 0 0 1px #3498db;
+  box-shadow: 0 0 1px var(--color-primary);
 }
 
 .toggleSwitch input:checked + .toggleSlider:before {
@@ -191,14 +190,15 @@
 
 .toggleLabel {
   font-size: 16px;
-  color: #2d3748;
+  color: var(--color-text);
 }
 
 .formGroup input[type="range"] {
   width: 100%;
   -webkit-appearance: none;
+  appearance: none;
   height: 6px;
-  background: #e2e8f0;
+  background: var(--color-surface-secondary);
   border-radius: 3px;
 }
 
@@ -207,7 +207,7 @@
   height: 16px;
   width: 16px;
   border-radius: 50%;
-  background: #3498db;
+  background: var(--color-primary);
   cursor: pointer;
 }
 
@@ -215,16 +215,16 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
 .parameterValue {
-  background-color: #edf2f7;
+  background-color: var(--color-surface-secondary);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .formActions {
@@ -234,18 +234,18 @@
 }
 
 .successMessage {
-  background-color: #e6fffa;
-  border-left: 4px solid #38b2ac;
-  color: #234e52;
+  background-color: var(--color-success-light);
+  border-left: 4px solid var(--color-success);
+  color: var(--color-text-on-success);
   padding: 12px 16px;
   border-radius: 4px;
   font-size: 14px;
 }
 
 .errorMessage {
-  background-color: #fff5f5;
-  border-left: 4px solid #e53e3e;
-  color: #c53030;
+  background-color: var(--color-danger-light);
+  border-left: 4px solid var(--color-danger);
+  color: var(--color-text-on-danger);
   padding: 12px 16px;
   border-radius: 4px;
   font-size: 14px;

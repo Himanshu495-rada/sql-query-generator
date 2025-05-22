@@ -1,8 +1,8 @@
 .sidebar {
   width: 280px;
   height: 100%;
-  background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
@@ -13,11 +13,30 @@
   width: 0;
   overflow: hidden;
   border-right: none;
+  /* Ensure position is reset if it was fixed */
+  position: relative; 
+}
+
+@media (max-width: 768px) {
+  .sidebar:not(.collapsed) {
+    position: fixed;
+    top: 64px; /* Navbar height */
+    left: 0;
+    height: calc(100vh - 64px); /* Full height below navbar */
+    z-index: 90; /* Below navbar (100), above content */
+    background-color: var(--color-surface); /* Ensure background is opaque */
+    box-shadow: var(--shadow-lg); /* Add a shadow for better separation */
+  }
+
+  /* When sidebar is an overlay, the main content should not be pushed. 
+     This is generally handled by PlaygroundPage.module.css ensuring its content area doesn't shrink.
+     The .collapsed class on the sidebar will make it width: 0, effectively hiding it. 
+  */
 }
 
 .sidebarHeader {
   padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
 }
@@ -30,16 +49,16 @@
 .searchInput {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light); /* Review this if --color-primary-light is not translucent */
 }
 
 .collapseButton {
@@ -53,13 +72,13 @@
   border-radius: 4px;
   cursor: pointer;
   margin-left: 8px;
-  color: #718096;
+  color: var(--color-text-secondary);
   transition: all 0.2s ease;
 }
 
 .collapseButton:hover {
-  background-color: #f7fafc;
-  color: #4a5568;
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 .collapseIcon {
@@ -78,19 +97,19 @@
   justify-content: space-between;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .sectionHeader h3 {
   margin: 0;
   font-size: 16px;
-  color: #4a5568;
+  color: var(--color-text-secondary); /* Using text-secondary for less emphasis than main text */
   font-weight: 500;
 }
 
 .expandIcon {
   font-size: 10px;
-  color: #718096;
+  color: var(--color-text-secondary);
   transition: transform 0.2s ease;
 }
 
@@ -107,11 +126,11 @@
   align-items: center;
   width: 100%;
   padding: 8px 16px;
-  background-color: #f7fafc;
-  border: 1px dashed #cbd5e0;
-  border-radius: 6px;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 16px;
@@ -119,19 +138,19 @@
 }
 
 .createButton:hover {
-  background-color: #edf2f7;
-  color: #3498db;
-  border-color: #3498db;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .createIcon {
   font-size: 16px;
   margin-right: 8px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .createButton:hover .createIcon {
-  color: #3498db;
+  color: var(--color-primary);
 }
 
 .itemList {
@@ -151,15 +170,15 @@
 }
 
 .item:hover {
-  background-color: #f7fafc;
+  background-color: var(--color-background);
 }
 
 .active {
-  background-color: #ebf8ff;
+  background-color: var(--color-primary-light);
 }
 
 .active .itemName {
-  color: #3498db;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -178,7 +197,7 @@
 
 .itemName {
   font-size: 14px;
-  color: #2d3748;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -186,7 +205,7 @@
 
 .itemMeta {
   font-size: 12px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 
@@ -196,21 +215,21 @@
 }
 
 .connected {
-  color: #2ecc71;
+  color: var(--color-success);
 }
 
 .disconnected {
-  color: #95a5a6;
+  color: var(--color-text-secondary);
 }
 
 .error {
-  color: #e74c3c;
+  color: var(--color-danger);
 }
 
 .emptyMessage {
   padding: 16px;
   text-align: center;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   font-size: 14px;
   font-style: italic;
 }
@@ -222,7 +241,7 @@
     left: 0;
     bottom: 0;
     z-index: 50;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     transform: translateX(0);
   }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./PlaygroundPage.module.css";
 import Navbar from "../components/shared/Navbar";
@@ -7,7 +7,7 @@ import PromptInput from "../components/playground/PromptInput";
 import SqlEditor from "../components/playground/SqlEditor";
 import ResultsTable from "../components/playground/ResultsTable";
 import DatabaseExplorer from "../components/playground/DatabaseExplorer";
-import QueryHistory from "../components/playground/QueryHistory";
+import QueryHistory, { QueryHistoryItem } from "../components/playground/QueryHistory";
 import Button from "../components/shared/Button";
 import Modal, { ModalFooter } from "../components/shared/Modal";
 import { useAuth } from "../contexts/AuthContext";
@@ -44,6 +44,7 @@ const PlaygroundPage: React.FC = () => {
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [isDbExplorerVisible, setIsDbExplorerVisible] = useState(true);
   const [activeTab, setActiveTab] = useState("sql"); // 'sql' or 'explanation'
+  const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
   const results = [
     {
@@ -279,9 +280,14 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Close dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isActionsDropdownOpen) {
+      if (
+        actionsDropdownRef.current &&
+        !actionsDropdownRef.current.contains(event.target as Node) &&
+        isActionsDropdownOpen
+      ) {
         setIsActionsDropdownOpen(false);
       }
     };
@@ -295,7 +301,7 @@ const PlaygroundPage: React.FC = () => {
   return (
     <div className={styles.playgroundPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={user ? { name: user.name, avatarUrl: user.avatarUrl || undefined } : undefined}
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         onCreatePlayground={handleCreateNewPlayground}
@@ -317,7 +323,7 @@ const PlaygroundPage: React.FC = () => {
               name: conn.name,
               status: conn.status,
             }))}
-            onPlaygroundClick={() => {}}
+            onPlaygroundClick={(id) => navigate(`/playground/${id}`)}
             onCreatePlayground={handleCreateNewPlayground}
             onDatabaseClick={(id) => setActiveConnection(id)}
             onConnectDatabase={() => navigate("/databases")}
@@ -389,7 +395,7 @@ const PlaygroundPage: React.FC = () => {
                 </select>
               )}
 
-              <div className={styles.actionsDropdown}>
+              <div className={styles.actionsDropdown} ref={actionsDropdownRef}>
                 <button
                   className={styles.actionsButton}
                   onClick={(e) => {
@@ -578,7 +584,7 @@ const PlaygroundPage: React.FC = () => {
                 <div className={styles.historyContainer}>
                   <QueryHistory
                     history={playground?.history || []}
-                    onSelectQuery={selectHistoryItem}
+                    onSelectQuery={(item: QueryHistoryItem) => selectHistoryItem(item.id)}
                     onClearHistory={clearHistory}
                   />
                 </div>

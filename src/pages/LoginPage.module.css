@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
 }
 
 .loginContainer {
@@ -11,10 +11,10 @@
   width: 100%;
   max-width: 1200px;
   min-height: 600px;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .loginFormContainer {
@@ -38,12 +38,12 @@
 .logo {
   width: 50px;
   height: 50px;
-  background-color: #3498db;
+  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  color: white;
+  color: var(--color-text-on-primary);
   font-weight: bold;
   font-size: 20px;
 }
@@ -52,13 +52,13 @@
   margin: 0 0 8px 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--color-text);
 }
 
 .loginHeader p {
   margin: 0;
   font-size: 16px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .loginForm {
@@ -79,7 +79,7 @@
 .formGroup label {
   font-weight: 500;
   font-size: 14px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .passwordLabel {
@@ -90,7 +90,7 @@
 
 .forgotPassword {
   font-size: 14px;
-  color: #3498db;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -100,16 +100,16 @@
 
 .formGroup input {
   padding: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 15px;
   transition: all 0.2s;
 }
 
 .formGroup input:focus {
-  border-color: #3498db;
+  border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-primary), 0.5);
 }
 
 .rememberMe {
@@ -122,7 +122,7 @@
   align-items: center;
   cursor: pointer;
   font-size: 14px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .checkbox input {
@@ -135,16 +135,16 @@
 .checkmark {
   height: 18px;
   width: 18px;
-  background-color: #edf2f7;
-  border: 1px solid #cbd5e0;
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   margin-right: 8px;
   position: relative;
 }
 
 .checkbox input:checked ~ .checkmark {
-  background-color: #3498db;
-  border-color: #3498db;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .checkmark:after {
@@ -159,7 +159,7 @@
   top: 2px;
   width: 4px;
   height: 9px;
-  border: solid white;
+  border: solid var(--color-text-on-primary);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -177,14 +177,14 @@
   left: 0;
   right: 0;
   height: 1px;
-  background-color: #e2e8f0;
+  background-color: var(--color-border);
 }
 
 .divider span {
   position: relative;
   padding: 0 16px;
-  background-color: white;
-  color: #718096;
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
@@ -200,12 +200,12 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background-color: white;
+  background-color: var(--color-surface);
   font-size: 14px;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -215,7 +215,7 @@
 }
 
 .socialButton:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
 }
 
 .socialButton svg {
@@ -224,21 +224,21 @@
 }
 
 .google:hover {
-  border-color: #4285f4;
+  border-color: var(--color-primary);
 }
 
 .github:hover {
-  border-color: #24292e;
+  border-color: var(--color-text);
 }
 
 .registerPrompt {
   text-align: center;
   font-size: 14px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .registerPrompt a {
-  color: #3498db;
+  color: var(--color-primary);
   font-weight: 500;
   text-decoration: none;
 }
@@ -268,8 +268,8 @@
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(52, 152, 219, 0.8) 0%,
-    rgba(41, 128, 185, 0.9) 100%
+    rgba(var(--rgb-primary), 0.8) 0%,
+    rgba(var(--rgb-primary), 0.9) 100%
   );
 }
 
@@ -277,7 +277,7 @@
   position: relative;
   z-index: 1;
   padding: 48px;
-  color: white;
+  color: var(--color-text-on-primary);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -307,9 +307,9 @@
 }
 
 .errorMessage {
-  background-color: #fff5f5;
-  border-left: 4px solid #e53e3e;
-  color: #c53030;
+  background-color: var(--color-danger-light);
+  border-left: 4px solid var(--color-danger);
+  color: var(--color-text-on-danger);
   padding: 12px 16px;
   border-radius: 4px;
   font-size: 14px;
@@ -329,7 +329,7 @@
 
 @media (max-width: 767px) {
   .loginPage {
-    background-color: #ffffff;
+    background-color: var(--color-surface);
   }
 
   .loginContainer {

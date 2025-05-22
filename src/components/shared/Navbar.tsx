@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import Button from "./Button";
 import { GoSidebarCollapse } from "react-icons/go";
+import ThemeToggle from "./ThemeToggle";
 
 interface NavbarProps {
   user?: {
@@ -37,6 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -90,7 +93,11 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleSettingsClick = () => {
     setIsDropdownOpen(false);
-    onSettingsClick?.();
+    if (onSettingsClick) {
+      onSettingsClick();
+    } else {
+      navigate("/settings");
+    }
   };
 
   return (
@@ -144,6 +151,14 @@ const Navbar: React.FC<NavbarProps> = ({
                 Connect DB
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => navigate('/gui-builder')}
+            >
+              GUI Builder
+            </Button>
+            <ThemeToggle />
           </div>
 
           <div className={styles.navAuth}>
@@ -184,23 +199,21 @@ const Navbar: React.FC<NavbarProps> = ({
                         Profile
                       </button>
                     )}
-                    {onSettingsClick && (
-                      <button
-                        onClick={handleSettingsClick}
-                        className={styles.dropdownItem}
-                      >
-                        Settings
-                      </button>
-                    )}
+                    {/* Always show Settings button if user is logged in */}
+                    <button
+                      onClick={handleSettingsClick}
+                      className={styles.dropdownItem}
+                    >
+                      Settings
+                    </button>
                     <div className={styles.dropdownDivider}></div>
-                    {onLogout && (
-                      <button
-                        onClick={handleLogout}
-                        className={styles.dropdownItem}
-                      >
-                        Logout
-                      </button>
-                    )}
+                    {/* Always show Logout button if user is logged in */}
+                    <button
+                      onClick={handleLogout} // handleLogout will call onLogout if it exists
+                      className={styles.dropdownItem}
+                    >
+                      Logout
+                    </button>
                   </div>
                 )}
               </div>

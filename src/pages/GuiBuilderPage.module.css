@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
 }
 
 .mainContainer {
@@ -24,12 +24,12 @@
 .builderHeader h1 {
   margin: 0 0 8px 0;
   font-size: 24px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .builderHeader p {
   margin: 0;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .noConnectionMessage {
@@ -49,12 +49,12 @@
 .noConnectionMessage h2 {
   margin: 0 0 12px 0;
   font-size: 20px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .noConnectionMessage p {
   margin: 0 0 24px 0;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .builderContainer {
@@ -64,16 +64,16 @@
 }
 
 .tableSelection {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
 }
 
 .tableSelection h2 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .tableGrid {
@@ -87,20 +87,20 @@
   align-items: center;
   padding: 16px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tableCard:hover {
-  border-color: #cbd5e0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
 .selectedTable {
-  border-color: #3498db;
-  background-color: #ebf8ff;
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .tableIcon {
@@ -114,12 +114,12 @@
 
 .tableName {
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .tableStats {
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
@@ -129,9 +129,9 @@
 .sortLimitSection,
 .previewExecuteSection,
 .resultsSection {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
 }
 
@@ -145,7 +145,7 @@
 .sectionHeader h2 {
   margin: 0;
   font-size: 18px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .fieldActions {
@@ -155,18 +155,18 @@
 
 .smallButton {
   padding: 6px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   font-size: 12px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .smallButton:hover {
-  background-color: #edf2f7;
-  border-color: #cbd5e0;
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-border);
 }
 
 .fieldGrid {
@@ -180,19 +180,19 @@
   align-items: center;
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .fieldCard:hover {
-  border-color: #cbd5e0;
-  background-color: #f8fafc;
+  border-color: var(--color-border);
+  background-color: var(--color-background);
 }
 
 .selectedField {
-  border-color: #3498db;
-  background-color: #ebf8ff;
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .fieldIcon {
@@ -208,7 +208,7 @@
 .fieldName {
   font-size: 13px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -216,13 +216,13 @@
 
 .fieldType {
   font-size: 11px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .emptyMessage {
   padding: 16px;
   text-align: center;
-  color: #a0aec0;
+  color: var(--color-text-disabled);
   font-style: italic;
 }
 
@@ -233,10 +233,10 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 }
 
 .conjunctionSelect {
@@ -254,7 +254,7 @@
 .valueInput {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
 }
 
@@ -267,25 +267,25 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #a0aec0;
+  color: var(--color-text-disabled);
   cursor: pointer;
   border-radius: 50%;
   transition: all 0.2s;
 }
 
 .removeButton:hover {
-  background-color: #fed7d7;
-  color: #e53e3e;
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 .emptyConditions,
 .emptyJoins,
 .emptySort {
   padding: 16px;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  color: #718096;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
 .joinTypeSelect {
@@ -307,12 +307,12 @@
 
 .joinDot {
   margin: 0 4px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .joinEquals {
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .sortLimitSection {
@@ -328,13 +328,13 @@
 .sortLabel,
 .limitLabel {
   margin-right: 8px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .limitInput {
   width: 80px;
   padding: 8px 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   margin-right: 8px;
 }
@@ -342,10 +342,10 @@
 .limitRow {
   display: flex;
   align-items: center;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 }
 
 .previewExecuteSection {
@@ -355,8 +355,8 @@
 }
 
 .sqlPreview {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 16px;
   overflow-x: auto;
@@ -366,7 +366,7 @@
   margin: 0;
   font-family: "JetBrains Mono", "Consolas", monospace;
   font-size: 14px;
-  color: #2d3748;
+  color: var(--color-code-text);
   line-height: 1.5;
 }
 
@@ -378,7 +378,7 @@
 .queryResults h2 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .loadingContainer {
@@ -389,19 +389,19 @@
 
 .errorContainer {
   padding: 16px;
-  background-color: #fff5f5;
+  background-color: var(--color-danger-light);
   border-radius: 6px;
-  border-left: 4px solid #e53e3e;
+  border-left: 4px solid var(--color-danger);
 }
 
 .errorContainer h2 {
   margin: 0 0 8px 0;
   font-size: 18px;
-  color: #c53030;
+  color: var(--color-text-on-danger);
 }
 
 .errorMessage {
-  color: #c53030;
+  color: var(--color-danger);
   font-family: monospace;
   white-space: pre-wrap;
 }

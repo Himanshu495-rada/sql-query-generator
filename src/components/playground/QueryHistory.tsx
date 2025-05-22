@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./QueryHistory.module.css";
 
-interface QueryHistoryItem {
+export interface QueryHistoryItem {
   id: string;
   timestamp: Date;
   prompt: string;

@@ -1,0 +1,67 @@
+/* Forced Dark Mode Styles */
+.force-dark-mode {
+  --primary-color: #3498db;
+  --background-color: #1a202c !important;
+  --surface-color: #2d3748 !important;
+  --text-color: #f7fafc !important;
+  --text-secondary: #cbd5e0 !important;
+  --border-color: #4a5568 !important;
+}
+
+/* Basic elements */
+.force-dark-mode body,
+.force-dark-mode html,
+.force-dark-mode div,
+.force-dark-mode main,
+.force-dark-mode section,
+.force-dark-mode article {
+  background-color: #1a202c !important;
+  color: #f7fafc !important;
+}
+
+/* Headers and nav */
+.force-dark-mode header,
+.force-dark-mode nav,
+.force-dark-mode .navbar,
+.force-dark-mode [class*="header"],
+.force-dark-mode [class*="navbar"] {
+  background-color: #2d3748 !important;
+  color: #f7fafc !important;
+  border-color: #4a5568 !important;
+}
+
+/* Text elements */
+.force-dark-mode h1,
+.force-dark-mode h2,
+.force-dark-mode h3,
+.force-dark-mode h4,
+.force-dark-mode h5,
+.force-dark-mode h6,
+.force-dark-mode p,
+.force-dark-mode span,
+.force-dark-mode a,
+.force-dark-mode label {
+  color: #f7fafc !important;
+}
+
+/* Form elements */
+.force-dark-mode input,
+.force-dark-mode textarea,
+.force-dark-mode select,
+.force-dark-mode button {
+  background-color: #2d3748 !important;
+  color: #f7fafc !important;
+  border-color: #4a5568 !important;
+}
+
+/* Cards and containers */
+.force-dark-mode .card,
+.force-dark-mode .container,
+.force-dark-mode .panel,
+.force-dark-mode [class*="card"],
+.force-dark-mode [class*="container"],
+.force-dark-mode [class*="panel"] {
+  background-color: #2d3748 !important;
+  color: #f7fafc !important;
+  border-color: #4a5568 !important;
+}

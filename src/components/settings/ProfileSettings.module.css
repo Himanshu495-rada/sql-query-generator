@@ -7,16 +7,16 @@
 .sectionTitle {
   font-size: 24px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
   margin: 0 0 24px 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .settingsSection {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
   margin-bottom: 32px;
 }
@@ -24,7 +24,7 @@
 .sectionSubtitle {
   font-size: 18px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
   margin: 0 0 24px 0;
 }
 
@@ -45,7 +45,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -59,7 +59,7 @@
 .avatarPlaceholder {
   font-size: 36px;
   font-weight: 500;
-  color: #3498db;
+  color: var(--color-primary);
 }
 
 .avatarOverlay {
@@ -68,7 +68,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay, rgba(0, 0, 0, 0.5));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +81,7 @@
 }
 
 .avatarOverlayText {
-  color: white;
+  color: var(--color-text-on-primary);
   font-size: 14px;
   font-weight: 500;
 }
@@ -93,7 +93,7 @@
 .avatarHint {
   margin-top: 8px;
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .formGroup {
@@ -104,13 +104,13 @@
 
 .formGroup label {
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text);
   font-size: 14px;
 }
 
 .formGroup input {
   padding: 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 15px;
   transition: border-color 0.2s;
@@ -118,8 +118,8 @@
 
 .formGroup input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .passwordStrengthIndicator {
@@ -136,24 +136,24 @@
 
 .weak .passwordStrengthBar {
   width: 33.33%;
-  background-color: #e53e3e;
+  background-color: var(--color-danger);
 }
 
 .medium .passwordStrengthBar {
   width: 66.66%;
-  background-color: #f6ad55;
+  background-color: var(--color-warning);
 }
 
 .strong .passwordStrengthBar {
   width: 100%;
-  background-color: #48bb78;
+  background-color: var(--color-success);
 }
 
 .passwordStrengthText {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .passwordRequirements {
@@ -161,7 +161,7 @@
   padding: 0;
   margin: 8px 0 0 0;
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .passwordRequirements li {
@@ -174,33 +174,33 @@
   content: "✖";
   position: absolute;
   left: 0;
-  color: #cbd5e0;
+  color: var(--color-border);
 }
 
 .passwordRequirements li.fulfilled::before {
   content: "✓";
-  color: #48bb78;
+  color: var(--color-success);
 }
 
 .passwordMismatch {
-  color: #e53e3e;
+  color: var(--color-danger);
   font-size: 12px;
   margin-top: 4px;
 }
 
 .successMessage {
-  background-color: #e6fffa;
-  border-left: 4px solid #38b2ac;
-  color: #234e52;
+  background-color: var(--color-success-light);
+  border-left: 4px solid var(--color-success);
+  color: var(--color-text-on-success);
   padding: 12px 16px;
   border-radius: 4px;
   font-size: 14px;
 }
 
 .errorMessage {
-  background-color: #fff5f5;
-  border-left: 4px solid #e53e3e;
-  color: #c53030;
+  background-color: var(--color-danger-light);
+  border-left: 4px solid var(--color-danger);
+  color: var(--color-text-on-danger);
   padding: 12px 16px;
   border-radius: 4px;
   font-size: 14px;

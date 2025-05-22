@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
 }
 
 .mainContainer {
@@ -25,13 +25,13 @@
   margin: 0 0 8px 0;
   font-size: 28px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .welcomeSection p {
   margin: 0;
   font-size: 16px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .statsSection {
@@ -42,9 +42,9 @@
 }
 
 .statCard {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -53,13 +53,13 @@
 
 .statCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .statIcon {
   font-size: 36px;
   margin-right: 20px;
-  background-color: #edf2f7;
+  background-color: var(--color-surface-secondary);
   width: 60px;
   height: 60px;
   border-radius: 12px;
@@ -77,13 +77,13 @@
   margin: 0 0 8px 0;
   font-size: 14px;
   font-weight: 500;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .statValue {
   font-size: 24px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--color-text);
   margin-bottom: 4px;
 }
 
@@ -93,11 +93,11 @@
 }
 
 .positive {
-  color: #2ecc71;
+  color: var(--color-success);
 }
 
 .negative {
-  color: #e74c3c;
+  color: var(--color-danger);
 }
 
 .dashboardGridContainer {
@@ -117,15 +117,15 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--color-text);
 }
 
 .recentSection,
 .playgroundsSection,
 .queriesSection {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   padding: 20px;
   height: 100%;
 }
@@ -143,7 +143,7 @@
   display: flex;
   align-items: flex-start;
   padding: 12px 0;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .activityItem:last-child {
@@ -163,8 +163,8 @@
 }
 
 .userAvatarPlaceholder {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,7 +179,7 @@
 .activityText {
   font-size: 14px;
   line-height: 1.5;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   margin-bottom: 4px;
 }
 
@@ -189,12 +189,12 @@
 
 .activityTarget {
   font-style: italic;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .activityTime {
   font-size: 12px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .playgroundsList {
@@ -208,12 +208,12 @@
   align-items: center;
   padding: 12px;
   border-radius: 8px;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   transition: all 0.2s ease;
 }
 
 .playgroundCard:hover {
-  background-color: #edf2f7;
+  background-color: var(--color-border);
 }
 
 .playgroundIcon {
@@ -231,7 +231,7 @@
   margin: 0 0 5px 0;
   font-size: 15px;
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text);
 }
 
 .playgroundDetails {
@@ -239,12 +239,12 @@
   flex-wrap: wrap;
   gap: 12px;
   font-size: 12px;
-  color: #718096;
+  color: var(--color-text-secondary);
 }
 
 .playgroundDatabase {
   font-weight: 500;
-  color: #3498db;
+  color: var(--color-primary);
 }
 
 .sampleQueriesList {
@@ -254,7 +254,7 @@
 }
 
 .queryCard {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -273,21 +273,21 @@
   margin: 0;
   font-size: 15px;
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text);
 }
 
 .queryDatabase {
   font-size: 12px;
-  color: #3498db;
+  color: var(--color-primary);
   font-weight: 500;
-  background-color: #ebf8ff;
+  background-color: var(--color-primary-light);
   padding: 2px 8px;
   border-radius: 4px;
 }
 
 .queryCode {
-  background-color: #2d3748;
-  color: #f7fafc;
+  background-color: var(--color-code-background);
+  color: var(--color-text);
   padding: 12px;
   border-radius: 6px;
   font-size: 13px;
@@ -325,14 +325,14 @@
 
 .formGroup label {
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text);
   font-size: 14px;
 }
 
 .formGroup input,
 .formGroup select {
   padding: 10px 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 15px;
   transition: all 0.2s;
@@ -340,14 +340,14 @@
 
 .formGroup input:focus,
 .formGroup select:focus {
-  border-color: #3498db;
+  border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .formNote {
   font-size: 13px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
