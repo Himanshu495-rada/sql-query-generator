@@ -38,53 +38,30 @@ class PlaygroundService {
       
       console.log('API Response:', response);
       
-      // The server returns playgrounds in this format: 
-      // {success: true, data: {playgrounds: [...]}} or directly in response
-      
-      let playgroundsData = null;
-      
-      // Direct check for the exact format shown in the API response
-      if (response?.success === true && response?.data?.playgrounds && Array.isArray(response.data.playgrounds)) {
-        // Format: {success: true, data: {playgrounds: [...]}}  
-        playgroundsData = response.data.playgrounds;
-        console.log('Found playgrounds in success.data.playgrounds format', playgroundsData);
-      }
-      // Check other possible formats
-      else if (response?.data?.success === true && response?.data?.data?.playgrounds) {
-        // Axios might wrap response in data property: {data: {success: true, data: {playgrounds: [...]}}}
-        playgroundsData = response.data.data.playgrounds;
-        console.log('Found playgrounds in nested data.data.playgrounds');
-      } 
-      else if (Array.isArray(response?.data)) {
-        // Direct array in data
-        playgroundsData = response.data;
-        console.log('Found array in data field');
-      }
-      else if (Array.isArray(response)) {
-        // Direct array response
-        playgroundsData = response;
-        console.log('Found direct array of playgrounds');
-      }
-      
-      // If we found playground data, format it for our UI
-      if (playgroundsData && Array.isArray(playgroundsData) && playgroundsData.length > 0) {
-        console.log(`Successfully loaded ${playgroundsData.length} playgrounds from API:`, playgroundsData);
+      // Handle successful API response
+      if (response?.data?.success === true && response?.data?.data?.playgrounds) {
+        const playgroundsData = response.data.data.playgrounds;
         
-        // Convert API data to our Playground interface
-        return playgroundsData.map((pg: any) => ({
-          id: pg.id,
-          name: pg.name,
-          databaseId: pg.connections && pg.connections.length > 0 ? 
-            pg.connections[0]?.connectionId : null,
-          currentSql: pg.currentSql || '',
-          currentPrompt: pg.currentPrompt || '',
-          currentExplanation: pg.currentExplanation || '',
-          history: Array.isArray(pg.history) ? pg.history.map((item: any) => ({
-            ...item,
-            timestamp: new Date(item.timestamp || Date.now()),
-          })) : [],
-          lastUpdated: new Date(pg.updatedAt || pg.createdAt || Date.now())
-        }));
+        // Ensure we have an array of playgrounds
+        if (Array.isArray(playgroundsData) && playgroundsData.length > 0) {
+          console.log(`Successfully loaded ${playgroundsData.length} playgrounds from API`);
+          
+          // Convert API data to our Playground interface
+          return playgroundsData.map((pg: any) => ({
+            id: pg.id,
+            name: pg.name,
+            databaseId: pg.connections && pg.connections.length > 0 ? 
+              pg.connections[0]?.connectionId : null,
+            currentSql: pg.currentSql || '',
+            currentPrompt: pg.currentPrompt || '',
+            currentExplanation: pg.currentExplanation || '',
+            history: Array.isArray(pg.history) ? pg.history.map((item: any) => ({
+              ...item,
+              timestamp: new Date(item.timestamp || Date.now()),
+            })) : [],
+            lastUpdated: new Date(pg.updatedAt || pg.createdAt || Date.now())
+          }));
+        }
       }
       
       console.warn('API did not return valid playground data, returning empty array');
@@ -209,8 +186,7 @@ class PlaygroundService {
   async deletePlayground(id: string): Promise<boolean> {
     try {
       console.log(`Deleting playground with ID ${id}`);
-      // Use the correct method name 'del' instead of 'delete'
-      const response = await api.del(`playgrounds/${id}`);
+      const response = await api.delete(`playgrounds/${id}`);
       
       return response?.data?.success === true;
     } catch (error) {

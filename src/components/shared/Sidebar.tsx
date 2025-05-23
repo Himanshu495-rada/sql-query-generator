@@ -28,8 +28,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({
   isVisible,
-  playgrounds,
-  databases,
+  playgrounds = [],
+  databases = [],
   onPlaygroundClick,
   onCreatePlayground,
   onDatabaseClick,
@@ -67,6 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // Filter playgrounds and databases based on search term
+  // No hardcoded samples - use only the data provided from the API
   const filteredPlaygrounds = playgrounds.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );

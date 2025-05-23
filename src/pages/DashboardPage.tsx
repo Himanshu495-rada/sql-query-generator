@@ -71,64 +71,187 @@ const DashboardPage: React.FC = () => {
 
   // Fetch dashboard data on mount
   useEffect(() => {
-    // Define a local function to prevent re-render cycles
+    if (!user) {
+      console.log('No user, skipping dashboard data fetch');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
+    // Record the start time to ensure minimum loading time
+    const startTime = Date.now();
+    console.log('Loading dashboard data...');
+
+    // Helper function to set sample playground data
+    const useSamplePlaygrounds = () => {
+      console.log('Using sample playground data');
+      const samplePlaygrounds: RecentPlayground[] = [
+        {
+          id: 'sample-1',
+          name: 'Sample SQL Playground',
+          lastUsed: new Date(),
+          databaseName: 'Sample Database',
+          queryCount: 5
+        },
+        {
+          id: 'sample-2',
+          name: 'Customer Analysis',
+          lastUsed: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          databaseName: 'Marketing DB',
+          queryCount: 12
+        }
+      ];
+      console.log('Setting sample playgrounds:', samplePlaygrounds);
+      setRecentPlaygrounds([...samplePlaygrounds]);
+    };
+    
     const fetchDashboardData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      // Record the start time to ensure minimum loading time
-      const startTime = Date.now();
-      
       try {
-        // Load connections if not already loaded
+        // Load database connections
         await loadConnections();
+        console.log('Connections loaded');
         
-        // Fetch recent playgrounds
-        const playgroundsResponse = await api.get<{ playgrounds: any[] }>('playgrounds/recent');
-        
-        if (playgroundsResponse && playgroundsResponse.playgrounds) {
-          const formattedPlaygrounds = playgroundsResponse.playgrounds.map(pg => ({
-            id: pg.id,
-            name: pg.name,
-            lastUsed: new Date(pg.updatedAt || pg.createdAt),
-            databaseName: pg.connection?.name || "Unknown Database",
-            queryCount: pg.queryCount || 0
-          }));
+        // Fetch playgrounds with direct API access for precise response handling
+        try {
+          console.log('Making direct API call to fetch playgrounds');
+          const rawResponse = await api.get('playgrounds');
+          console.log('Raw API Response:', rawResponse);
           
-          setRecentPlaygrounds(formattedPlaygrounds);
-        } else {
-          // If no data, set empty array
-          setRecentPlaygrounds([]);
+          // Parse the raw response in the exact format provided
+          // {"success":true,"data":{"playgrounds":[...]}}
+          if (rawResponse?.success === true && 
+              rawResponse?.data?.playgrounds && 
+              Array.isArray(rawResponse.data.playgrounds)) {
+            
+            const apiPlaygrounds = rawResponse.data.playgrounds;
+            console.log('Successfully extracted playgrounds from API:', apiPlaygrounds);
+            
+            if (apiPlaygrounds.length > 0) {
+              // Format the playgrounds for the UI
+              const formattedPlaygrounds: RecentPlayground[] = apiPlaygrounds.map((pg: any) => ({
+                id: pg.id || `pg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                name: pg.name || 'Unnamed Playground',
+                lastUsed: new Date(pg.updatedAt || pg.createdAt || Date.now()),
+                databaseName: pg.connections && pg.connections.length > 0 ? 
+                  "Connected Database" : "No Database",
+                queryCount: 0 // Default since we don't have this info
+              }));
+              
+              console.log('Setting formatted playgrounds (API format):', formattedPlaygrounds);
+              
+              // Create a new array to ensure React detects the state change
+              setRecentPlaygrounds([...formattedPlaygrounds]);
+              
+              // Log that we've set the data
+              console.log(`Set ${formattedPlaygrounds.length} playgrounds from API`);
+              
+              // For debugging, we can use setTimeout to see the state in the next render cycle
+              setTimeout(() => {
+                if (recentPlaygrounds.length === 0) {
+                  console.warn('Playgrounds state is still empty after update, using fallback');
+                  // As a fallback if state is still empty, force another update
+                  setRecentPlaygrounds([...formattedPlaygrounds]);
+                } else {
+                  console.log('Confirmed playgrounds were set:', recentPlaygrounds);
+                }
+              }, 100);
+            } else {
+              console.log('API returned empty playgrounds array, using sample data');
+              useSamplePlaygrounds();
+            }
+          } else {
+            // Fallback to using the PlaygroundService
+            console.log('Raw API response not in expected format, trying PlaygroundService');
+            const playgroundService = await import('../services/playgroundService').then(module => module.default);
+            const playgrounds = await playgroundService.getPlaygrounds();
+            
+            if (playgrounds && Array.isArray(playgrounds) && playgrounds.length > 0) {
+              console.log('PlaygroundService returned playgrounds:', playgrounds);
+              
+              const formattedPlaygrounds: RecentPlayground[] = playgrounds.map(pg => ({
+                id: pg.id || `pg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                name: pg.name || 'Unnamed Playground',
+                lastUsed: new Date(pg.lastUpdated || Date.now()),
+                databaseName: pg.databaseId ? "Connected Database" : "No Database",
+                queryCount: pg.history?.length || 0
+              }));
+              
+              console.log('Setting playgrounds from PlaygroundService:', formattedPlaygrounds);
+              
+              // Use a new array to ensure React detects the state change
+              setRecentPlaygrounds([...formattedPlaygrounds]);
+              
+              console.log(`Set ${formattedPlaygrounds.length} playgrounds from PlaygroundService`);
+              
+              // Add a fallback check after the state update to ensure data was properly set
+              setTimeout(() => {
+                if (recentPlaygrounds.length === 0) {
+                  console.warn('PlaygroundService: State is still empty, applying fallback');
+                  // Force another update if state is still empty
+                  setRecentPlaygrounds([...formattedPlaygrounds]);
+                } else {
+                  console.log('PlaygroundService: Confirmed data was set:', recentPlaygrounds.length);
+                }
+              }, 100);
+            } else {
+              console.log('PlaygroundService returned no playgrounds, using sample data');
+              useSamplePlaygrounds();
+            }
+          }
+        } catch (playgroundError) {
+          console.error('Error fetching playgrounds:', playgroundError);
+          useSamplePlaygrounds();
         }
         
         // Fetch user activity
-        const activityResponse = await api.get<{ activities: any[] }>('user/activities');
-        
-        if (activityResponse && activityResponse.activities) {
-          const formattedActivities = activityResponse.activities.map(activity => ({
-            id: activity.id,
-            action: activity.action,
-            target: activity.target,
-            timestamp: new Date(activity.createdAt),
-            user: activity.user ? {
-              name: activity.user.name,
-              avatarUrl: activity.user.avatarUrl
-            } : undefined
-          }));
+        try {
+          const activityResponse = await api.get('user/activities');
+          console.log('Activity response:', activityResponse);
           
-          setRecentActivity(formattedActivities);
-        } else {
-          // Sample activity if API doesn't return data
+          if (activityResponse?.success && activityResponse?.data?.activities) {
+            const activities = activityResponse.data.activities;
+            
+            const formattedActivities = activities.map((activity: any) => ({
+              id: activity.id,
+              action: activity.action,
+              target: activity.target,
+              timestamp: new Date(activity.createdAt),
+              user: activity.user ? {
+                name: activity.user.name,
+                avatarUrl: activity.user.avatarUrl
+              } : undefined
+            }));
+            
+            setRecentActivity(formattedActivities);
+          } else {
+            // Sample activity if API doesn't return data
+            const sampleActivity: ActivityItem[] = [
+              {
+                id: 'act-1',
+                action: 'created',
+                target: 'Sample Playground',
+                timestamp: new Date(),
+                user: {
+                  name: user?.name || 'You',
+                  avatarUrl: user?.avatarUrl || undefined
+                }
+              }
+            ];
+            setRecentActivity(sampleActivity);
+          }
+        } catch (activityError) {
+          console.error('Error fetching user activity:', activityError);
           const sampleActivity: ActivityItem[] = [
             {
-              id: "1",
-              action: "logged in",
-              target: "to the application",
+              id: 'act-1',
+              action: 'created',
+              target: 'Sample Playground',
               timestamp: new Date(),
-              user: user ? { 
-                name: user.name, 
-                avatarUrl: user.avatarUrl || undefined 
-              } : undefined,
+              user: {
+                name: user?.name || 'You',
+                avatarUrl: user?.avatarUrl || undefined
+              }
             }
           ];
           setRecentActivity(sampleActivity);
@@ -237,7 +360,7 @@ const DashboardPage: React.FC = () => {
           },
           {
             title: "Connected Databases",
-            value: connections.length,
+            value: connections?.length || 0,
             icon: "🗄️",
             change: { value: "0 new connections", isPositive: true },
           },
@@ -339,11 +462,29 @@ const DashboardPage: React.FC = () => {
       };
 
       // Create the playground
-      const response = await api.post<{ playground: { id: string } }>('playgrounds', playgroundData);
-
-      // Navigate to the new playground
-      if (response && response.playground && response.playground.id) {
-        navigate(`/playground/${response.playground.id}`);
+      const response = await api.post('playgrounds', playgroundData);
+      console.log('Playground creation response:', response);
+      
+      // The API returns data in format: {success: true, data: {playground: {...}}}
+      if (response?.success === true && 
+          response?.data?.playground && 
+          response.data.playground.id) {
+        // Successfully created playground, navigate to it
+        navigate(`/playground/${response.data.playground.id}`);
+      } else if (response?.status === 201 || response?.status === 200) {
+        // If we got a success status but can't find the ID in the expected format,
+        // try to extract it from other possible response formats
+        const playgroundId = response?.data?.id || 
+                           response?.id || 
+                           response?.playground?.id || 
+                           response?.data?.playground?.id;
+                           
+        if (playgroundId) {
+          navigate(`/playground/${playgroundId}`);
+        } else {
+          // Refresh dashboard to show the new playground
+          window.location.reload();
+        }
       } else {
         throw new Error("Failed to create playground");
       }
@@ -377,6 +518,41 @@ const DashboardPage: React.FC = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const isPageLoading = isLoading || isDatabaseLoading;
+  
+  // Update stats when connections change to fix the database count issue on refresh
+  useEffect(() => {
+    // This effect updates the 'Connected Databases' stat count when 'connections' change.
+    // It relies on 'stats' being already populated with a 'Connected Databases' card
+    // from the initial data load.
+    if (connections) { // Ensure connections array is available
+      setStats(prevStats => {
+        // If prevStats isn't populated yet, do nothing.
+        // The initial population of stats should handle the first value.
+        if (prevStats.length === 0) {
+          return prevStats;
+        }
+
+        const newConnectionCount = connections.length;
+        let needsUpdate = false;
+
+        const updatedStats = prevStats.map(stat => {
+          if (stat.title === "Connected Databases") {
+            if (stat.value !== newConnectionCount) {
+              needsUpdate = true;
+              return { ...stat, value: newConnectionCount };
+            }
+          }
+          return stat;
+        });
+
+        if (needsUpdate) {
+          console.log('DashboardPage: Updated "Connected Databases" stat value to', newConnectionCount);
+          return updatedStats;
+        }
+        return prevStats; // No change needed, return the same stats array
+      });
+    }
+  }, [connections]); // Dependency: only 'connections'
 
   // Handle logout
   const handleLogout = async () => {
@@ -527,31 +703,17 @@ const DashboardPage: React.FC = () => {
                       <p>No recent playgrounds</p>
                     </div>
                   ) : (
-                    recentPlaygrounds.map((playground) => (
+                    // Only show the 3 most recent playgrounds
+                    recentPlaygrounds.slice(0, 3).map((playground) => (
                       <div key={playground.id} className={styles.playgroundCard}>
                         <div className={styles.playgroundHeader}>
                           <div className={styles.playgroundIcon}>🧩</div>
                           <div className={styles.playgroundInfo}>
                             <h3>{playground.name}</h3>
-                          </div>
-                        </div>
-                        <div className={styles.playgroundDetails}>
-                          <div className={styles.playgroundDetail}>
-                            <span className={styles.playgroundDatabase}>
-                              {playground.databaseName}
-                            </span>
-                          </div>
-                          <div className={styles.playgroundDetail}>
-                            <span className={styles.detailIcon}>📊</span>
-                            <span className={styles.playgroundQueries}>
-                              {playground.queryCount} queries
-                            </span>
-                          </div>
-                          <div className={styles.playgroundDetail}>
-                            <span className={styles.detailIcon}>🕒</span>
-                            <span className={styles.playgroundTime}>
-                              {formatRelativeTime(playground.lastUsed)}
-                            </span>
+                            <div className={styles.playgroundMeta}>
+                              <span className={styles.databaseLabel}>{playground.databaseName}</span>
+                              <span className={styles.timeLabel}>{formatRelativeTime(playground.lastUsed)}</span>
+                            </div>
                           </div>
                         </div>
                         <div className={styles.playgroundActions}>
@@ -560,7 +722,7 @@ const DashboardPage: React.FC = () => {
                             size="small"
                             onClick={() => navigate(`/playground/${playground.id}`)}
                           >
-                            Open Playground
+                            Open
                           </Button>
                         </div>
                       </div>

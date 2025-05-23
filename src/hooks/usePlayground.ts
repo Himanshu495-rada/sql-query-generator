@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import useDatabase from "./useDatabase";
 import useAi from "./useAi";
+import playgroundService from "../services/playgroundService";
 
 interface QueryHistoryItem {
   id: string;
@@ -54,6 +55,7 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
     executeQuery: dbExecuteQuery,
     activeConnection,
     setActiveConnection,
+    connections,
   } = useDatabase();
   const { generateSql, isGenerating } = useAi();
 
@@ -67,10 +69,35 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
     }
   }, [playgroundId]);
 
-  // Load playground from localStorage (or eventually from backend)
+  // Load playground from API or localStorage as fallback
   const loadPlayground = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      // Set loading state while fetching
+      setIsExecuting(true);
+      setError(null);
+      
       try {
+        // First try to load from the API
+        try {
+          const playground = await playgroundService.getPlayground(id);
+          
+          setPlayground(playground);
+          
+          // Set active connection if the playground has a database
+          if (playground.databaseId) {
+            // Find the connection in the loaded connections list
+            const connectionToActivate = connections.find(conn => conn.id === playground.databaseId);
+            if (connectionToActivate) {
+              setActiveConnection(connectionToActivate);
+            }
+          }
+          
+          return;
+        } catch (apiError) {
+          console.log('Could not load playground from API, falling back to localStorage:', apiError);
+          // If API fails, try localStorage as fallback
+        }
+        
         // Try to load from localStorage
         const savedData = localStorage.getItem(`playground_${id}`);
 
@@ -91,7 +118,11 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
 
           // Set active connection if the playground has a database
           if (playground.databaseId) {
-            setActiveConnection(playground.databaseId);
+            // Find the connection in the loaded connections list
+            const connectionToActivate = connections.find(conn => conn.id === playground.databaseId);
+            if (connectionToActivate) {
+              setActiveConnection(connectionToActivate);
+            }
           }
         } else {
           setError(`Playground with ID ${id} not found`);

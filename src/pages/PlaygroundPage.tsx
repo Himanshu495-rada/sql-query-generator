@@ -14,6 +14,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { useDatabase } from "../contexts/DatabaseContext";
 import usePlayground from "../hooks/usePlayground";
 import { formatSql, isDmlQuery } from "../utils/sqlFormatter";
+import playgroundService from "../services/playgroundService";
+
+// Define interfaces for the playground data structure
+interface PlaygroundItem {
+  id: string;
+  name: string;
+  lastUsed?: Date;
+  databaseName?: string;
+}
 
 const PlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -130,7 +139,10 @@ const PlaygroundPage: React.FC = () => {
   ];
 
   // Add sample data for testing
-  const [sampleResults, setSampleResults] = useState(results);
+  const [sampleResults] = useState(results);
+  
+  // State for recent playgrounds to show in sidebar
+  const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>([]);
 
   // Example prompts for the prompt input
   const examplePrompts = [
@@ -166,6 +178,29 @@ const PlaygroundPage: React.FC = () => {
       handleCreateNewPlayground();
     }
   }, [id, playground]);
+  
+  // Effect to fetch playgrounds for the sidebar
+  useEffect(() => {
+    const fetchPlaygrounds = async () => {
+      try {
+        const playgroundsData = await playgroundService.getPlaygrounds();
+        // Sort by lastUpdated to show most recent first
+        const sortedPlaygrounds = [...playgroundsData].sort(
+          (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+        );
+        setRecentPlaygrounds(sortedPlaygrounds.map(pg => ({
+          id: pg.id,
+          name: pg.name,
+          lastUsed: pg.lastUpdated,
+          databaseName: connections.find(c => c.id === pg.databaseId)?.name || 'No database'
+        })));
+      } catch (error) {
+        console.error('Error fetching playgrounds:', error);
+      }
+    };
+    
+    fetchPlaygrounds();
+  }, [connections]);
 
   // Create a new playground
   const handleCreateNewPlayground = useCallback(() => {
@@ -196,7 +231,11 @@ const PlaygroundPage: React.FC = () => {
   const handleDatabaseChange = (databaseId: string) => {
     if (playground) {
       savePlayground({ databaseId });
-      setActiveConnection(databaseId);
+      // Find the database connection object by ID
+      const connection = connections.find(conn => conn.id === databaseId);
+      if (connection) {
+        setActiveConnection(connection);
+      }
     }
   };
 
@@ -312,11 +351,11 @@ const PlaygroundPage: React.FC = () => {
         {isSidebarVisible && (
           <Sidebar
             isVisible={isSidebarVisible}
-            playgrounds={connections.map((conn) => ({
-              id: conn.id,
-              name: conn.name,
-              lastUpdated: conn.lastConnected || new Date(),
-              isActive: activeConnection?.id === conn.id,
+            playgrounds={recentPlaygrounds.map((pg) => ({
+              id: pg.id,
+              name: pg.name,
+              lastUpdated: pg.lastUsed || new Date(),
+              isActive: id === pg.id,
             }))}
             databases={connections.map((conn) => ({
               id: conn.id,
@@ -325,7 +364,12 @@ const PlaygroundPage: React.FC = () => {
             }))}
             onPlaygroundClick={(id) => navigate(`/playground/${id}`)}
             onCreatePlayground={handleCreateNewPlayground}
-            onDatabaseClick={(id) => setActiveConnection(id)}
+            onDatabaseClick={(id) => {
+              const connection = connections.find(conn => conn.id === id);
+              if (connection) {
+                setActiveConnection(connection);
+              }
+            }}
             onConnectDatabase={() => navigate("/databases")}
             onCollapse={() => setIsSidebarVisible(false)}
           />
