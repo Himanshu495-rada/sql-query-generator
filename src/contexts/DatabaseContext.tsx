@@ -2,24 +2,26 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import databaseService, {
   DatabaseConnection,
   ConnectionParams,
   QueryResult,
-  DatabaseSchema,
 } from "../services/databaseService";
 
-// Updated database type enum to match backend
-export enum DatabaseType {
-  MYSQL = "mysql",
-  POSTGRESQL = "postgresql",
-  SQLITE = "sqlite",
-  MONGODB = "mongodb",
-  SAMPLE = "sample"
-}
+// Updated database type as a const object to be compatible with erasableSyntaxOnly
+export const DatabaseType = {
+  MYSQL: "mysql",
+  POSTGRESQL: "postgresql",
+  SQLITE: "sqlite",
+  MONGODB: "mongodb",
+  SAMPLE: "sample"
+} as const;
+
+// Create a type from the object values
+export type DatabaseType = typeof DatabaseType[keyof typeof DatabaseType];
 
 interface DatabaseContextType {
   connections: DatabaseConnection[];
@@ -91,23 +93,27 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Load user's database connections
-  const loadConnections = async (): Promise<void> => {
+  const loadConnections = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const connectionsList = await databaseService.getConnections();
-      setConnections(connectionsList);
+      // Even if empty, at least we have a valid array now
+      setConnections(connectionsList || []);
     } catch (err) {
       console.error("Failed to load connections:", err);
+      // Set the error message but don't break the UI
       setError(err instanceof Error ? err.message : "Failed to load connections");
+      // Ensure connections is always at least an empty array
+      setConnections([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Connect to a database
-  const connectToDatabase = async (
+  const connectToDatabase = useCallback(async (
     params: ConnectionParams
   ): Promise<DatabaseConnection> => {
     setIsLoading(true);
@@ -127,83 +133,73 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Disconnect from a database
-  const disconnectDatabase = async (connectionId: string): Promise<void> => {
+  const disconnectDatabase = useCallback(async (connectionId: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
       await databaseService.disconnectDatabase(connectionId);
-
-      // Update connections list and active connection
-      setConnections((prev) =>
-        prev.filter((conn) => conn.id !== connectionId)
-      );
-
+      
+      // Update active connection if we just disconnected it
       if (activeConnection?.id === connectionId) {
         setActiveConnection(null);
       }
     } catch (err) {
       console.error("Failed to disconnect database:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to disconnect from database"
+        err instanceof Error ? err.message : "Failed to disconnect database"
       );
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Execute a query on the active connection
-  const executeQuery = async (query: string): Promise<QueryResult> => {
+  const executeQuery = useCallback(async (query: string): Promise<QueryResult> => {
+    if (!activeConnection) {
+      throw new Error("No active database connection");
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      if (!activeConnection) {
-        throw new Error("No active database connection");
-      }
-
-      return await databaseService.executeQuery(activeConnection.id, query);
+      return await databaseService.executeQuery(
+        activeConnection.id,
+        query
+      );
     } catch (err) {
       console.error("Query execution failed:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to execute query"
-      );
+      setError(err instanceof Error ? err.message : "Query execution failed");
       throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeConnection]);
 
   // Refresh schema for the active connection
-  const refreshSchema = async (): Promise<void> => {
+  const refreshSchema = useCallback(async (): Promise<void> => {
+    if (!activeConnection) {
+      throw new Error("No active database connection");
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      if (!activeConnection) {
-        throw new Error("No active database connection");
-      }
-
-      const schema = await databaseService.refreshSchema(activeConnection.id);
-
-      // Update the active connection with the new schema
-      const updatedConnection = {
-        ...activeConnection,
-        schema,
-      };
-
-      setActiveConnection(updatedConnection);
-
-      // Update in the connections list too
-      setConnections((prev) =>
-        prev.map((conn) =>
-          conn.id === activeConnection.id ? updatedConnection : conn
-        )
+      const updatedSchema = await databaseService.refreshSchema(
+        activeConnection.id
       );
+      
+      // Update the active connection with the new schema
+      setActiveConnection({
+        ...activeConnection,
+        schema: updatedSchema,
+      });
     } catch (err) {
       console.error("Schema refresh failed:", err);
       setError(
@@ -213,10 +209,10 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeConnection]);
 
   // Load a sample database
-  const loadSampleDatabase = async (sampleId: string): Promise<void> => {
+  const loadSampleDatabase = useCallback(async (sampleId: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -233,17 +229,17 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Delete a connection
-  const deleteConnection = async (connectionId: string): Promise<void> => {
+  const deleteConnection = useCallback(async (connectionId: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
       await databaseService.deleteConnection(connectionId);
-
-      // Update connections list and active connection
+      
+      // Remove from local state
       setConnections((prev) =>
         prev.filter((conn) => conn.id !== connectionId)
       );
@@ -260,10 +256,10 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeConnection]);
 
   // Test a connection without saving it
-  const testConnection = async (params: ConnectionParams): Promise<boolean> => {
+  const testConnection = useCallback(async (params: ConnectionParams): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
@@ -278,7 +274,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Clear error state
   const clearError = () => setError(null);

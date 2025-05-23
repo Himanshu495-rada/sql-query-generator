@@ -154,13 +154,28 @@ class DatabaseService {
    */
   async getConnections(): Promise<DatabaseConnection[]> {
     try {
-      const response = await api.get<{ connections: any[] }>('connections');
-      return response.connections.map(this.normalizeConnection);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
+      const response = await api.get('connections');
+      
+      // Check if the response has the expected structure
+      if (!response || typeof response !== 'object') {
+        console.error('Invalid response format from connections API:', response);
+        return [];
       }
-      throw new Error('Failed to get connections');
+      
+      // Handle case where connections might be directly in response or in response.data
+      const connections = response.connections || response.data?.connections || [];
+      
+      // If connections is not an array, log error and return empty array
+      if (!Array.isArray(connections)) {
+        console.error('Connections is not an array:', connections);
+        return [];
+      }
+      
+      return connections.map(this.normalizeConnection);
+    } catch (error) {
+      console.error('Failed to get connections:', error);
+      // Instead of throwing, return empty array to avoid breaking the UI
+      return [];
     }
   }
 

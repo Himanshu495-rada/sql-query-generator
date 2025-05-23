@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./SignupPage.module.css";
 import Button from "../components/shared/Button";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const SignupPage: React.FC = () => {
   // Form state
@@ -22,6 +23,13 @@ const SignupPage: React.FC = () => {
     confirmPassword?: string;
     terms?: string;
   }>({});
+
+  // Navigation and location hooks
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the redirect path from location state (if any)
+  const from = location.state?.from || "/";
 
   // Auth context for signup functionality
   const { signup, isLoading, error } = useAuth();
@@ -104,7 +112,8 @@ const SignupPage: React.FC = () => {
 
     try {
       await signup(name, email, password);
-      // Redirect happens automatically through auth context navigation
+      // Navigate to the original intended destination or default to dashboard
+      navigate(from, { replace: true });
     } catch (err) {
       // Error is handled by auth context
       console.error("Signup error:", err);

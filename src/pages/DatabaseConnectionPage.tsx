@@ -45,7 +45,7 @@ const DatabaseConnectionPage: React.FC = () => {
   const [localConnections, setLocalConnections] = useState<any[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
 
-  // Fetch connections on mount
+  // Fetch connections on mount - use empty dependency array to run only once
   useEffect(() => {
     const fetchConnections = async () => {
       setLocalLoading(true);
@@ -64,7 +64,8 @@ const DatabaseConnectionPage: React.FC = () => {
     };
 
     fetchConnections();
-  }, [loadConnections]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle database connection
   const handleConnect = async (connectionData: ConnectionData) => {

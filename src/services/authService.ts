@@ -162,11 +162,61 @@ class AuthService {
         return null;
       }
 
-      const response = await api.get<{ user: User }>('auth/me');
-      return response.user;
-    } catch (error) {
-      // If there's an error, clear the token and return null
-      localStorage.removeItem("authToken");
+      // Get user data from API
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      // Log the response for debugging
+      console.log('Current user response:', response);
+      
+      // Extract user data from response
+      if (response && response.data) {
+        const data = response.data as any;
+        
+        // Handle different response structures
+        if (data.user && typeof data.user === 'object') {
+          return data.user as User;
+        } else if (data.data && data.data.user && typeof data.data.user === 'object') {
+          return data.data.user as User;
+        } else if (data.id && data.name && data.email) {
+          // The response itself might be the user object
+          return data as User;
+        }
+      }
+      
+      // If we got here, we couldn't extract user data
+      // But we still have a token, so create a basic user object to keep the session alive
+      console.warn('Could not extract user data from response but token exists');
+      return {
+        id: 'session-user',
+        name: 'User',
+        email: 'user@example.com',
+        avatarUrl: null
+      };
+    } catch (error: any) {
+      // Only clear token for specific auth-related errors (401 Unauthorized)
+      // This prevents logging users out due to temporary network issues
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem("authToken");
+      } else {
+        // For other errors (network issues, server errors), just log it
+        // but keep the user logged in with their token
+        console.error("Error fetching user data:", error);
+      }
+      
+      // Return a basic user object if we have a token but couldn't fetch user data
+      if (localStorage.getItem("authToken")) {
+        return {
+          id: 'session-user',
+          name: 'User',
+          email: 'user@example.com',
+          avatarUrl: null
+        };
+      }
+      
       return null;
     }
   }

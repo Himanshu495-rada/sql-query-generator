@@ -55,19 +55,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check for existing session when the app loads
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Use the auth service to check if user is authenticated
-        if (authService.isAuthenticated()) {
+        // Check if token exists and set authentication state accordingly
+        const hasToken = authService.isAuthenticated();
+        setIsAuthenticated(hasToken);
+        
+        // If we have a token, try to get the user data
+        if (hasToken) {
           const userData = await authService.getCurrentUser();
-          setUser(userData);
+          if (userData) {
+            setUser(userData);
+          } else {
+            // If we have a token but couldn't get user data, we'll still treat them as logged in
+            // This prevents unnecessary logouts on temporary API issues
+            console.log("Could not fetch user data, but token exists. Keeping user logged in.");
+          }
         }
       } catch (err) {
         console.error("Auth initialization error:", err);
-        authService.logout();
+        // Only log out if it's a critical auth error
+        // For network issues, let's preserve the session
+        if (err instanceof Error && err.message.includes("unauthorized")) {
+          authService.logout();
+          setIsAuthenticated(false);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -92,6 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       setUser(userData);
+      setIsAuthenticated(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log in");
       throw err;
@@ -107,6 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
+      setIsAuthenticated(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log out");
     } finally {
@@ -131,6 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       setUser(userData);
+      setIsAuthenticated(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign up");
       throw err;
@@ -200,22 +219,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Create the context value
-  const contextValue: AuthContextType = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    error,
-    login,
-    logout,
-    signup,
-    resetPassword,
-    updateProfile,
-    updatePassword,
-  };
+  // Auth context value is provided directly to the provider
 
   return (
-    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        error,
+        login,
+        logout,
+        signup,
+        resetPassword,
+        updateProfile,
+        updatePassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 };
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import Button from "./Button";
 import { GoSidebarCollapse } from "react-icons/go";
+import { FiUser, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import ThemeToggle from "./ThemeToggle";
 
 interface NavbarProps {
@@ -158,16 +159,16 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               GUI Builder
             </Button>
-            <ThemeToggle />
           </div>
-
+          
           <div className={styles.navAuth}>
-            {user ? (
+            <ThemeToggle />
+            
+            {/* User Profile Button */}
+            {user && (
               <div className={styles.userProfile} ref={dropdownRef}>
                 <div
-                  className={`${styles.userProfileButton} ${
-                    isDropdownOpen ? styles.userProfileButtonActive : ""
-                  }`}
+                  className={`${styles.userProfileButton} ${isDropdownOpen ? styles.userProfileButtonActive : ""}`}
                   onClick={toggleDropdown}
                 >
                   {user.avatarUrl ? (
@@ -182,11 +183,11 @@ const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   )}
                   <span className={styles.userName}>{user.name}</span>
-                  <span
-                    className={`${styles.dropdownArrow} ${
-                      isDropdownOpen ? styles.dropdownActive : ""
-                    }`}
-                  ></span>
+                  <FiChevronDown 
+                    size={16} 
+                    className={isDropdownOpen ? styles.dropdownActive : ""}
+                    color="var(--color-text-secondary)"
+                  />
                 </div>
 
                 {isDropdownOpen && (
@@ -196,33 +197,37 @@ const Navbar: React.FC<NavbarProps> = ({
                         onClick={handleProfileClick}
                         className={styles.dropdownItem}
                       >
+                        <FiUser size={16} />
                         Profile
                       </button>
                     )}
                     {/* Always show Settings button if user is logged in */}
-                    <button
-                      onClick={handleSettingsClick}
-                      className={styles.dropdownItem}
-                    >
-                      Settings
-                    </button>
+                      <button
+                        onClick={handleSettingsClick}
+                        className={styles.dropdownItem}
+                      >
+                        <FiSettings size={16} />
+                        Settings
+                      </button>
                     <div className={styles.dropdownDivider}></div>
                     {/* Always show Logout button if user is logged in */}
                     <button
-                      onClick={handleLogout} // handleLogout will call onLogout if it exists
+                      onClick={handleLogout}
                       className={styles.dropdownItem}
                     >
+                      <FiLogOut size={16} />
                       Logout
                     </button>
                   </div>
                 )}
               </div>
-            ) : (
-              onLogin && (
-                <Button variant="secondary" size="small" onClick={onLogin}>
-                  Log In
-                </Button>
-              )
+            )}
+            
+            {/* Login Button (if not logged in) */}
+            {!user && onLogin && (
+              <Button variant="secondary" size="small" onClick={onLogin}>
+                Log In
+              </Button>
             )}
           </div>
         </div>

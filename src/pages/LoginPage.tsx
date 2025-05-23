@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import styles from "./LoginPage.module.css";
 import Button from "../components/shared/Button";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { nav } from "framer-motion/client";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   // Form state
@@ -12,6 +11,10 @@ const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the redirect path from location state (if any)
+  const from = location.state?.from || "/";
 
   // Auth context for login functionality
   const { login, isLoading, error } = useAuth();
@@ -22,8 +25,8 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      // Redirect happens automatically through auth context navigation
-      navigate("/");
+      // Navigate to the original intended destination or default to dashboard
+      navigate(from, { replace: true });
     } catch (err) {
       // Error is handled by auth context
       console.error("Login error:", err);

@@ -63,6 +63,9 @@ const App: React.FC = () => {
   useEffect(() => {
     // Check for valid token and preload user data if possible
     const initializeAuth = async () => {
+      // Record start time to enforce minimum loading time
+      const startTime = Date.now();
+      
       try {
         if (authService.isAuthenticated()) {
           await authService.getCurrentUser();
@@ -71,7 +74,19 @@ const App: React.FC = () => {
         // Token invalid or expired, it will be cleared by the authService
         console.error("Auth initialization error:", error);
       } finally {
-        setIsLoading(false);
+        // Enforce minimum loading time of 1 second
+        const elapsedTime = Date.now() - startTime;
+        const minLoadingTime = 1000; // 1 second
+        
+        if (elapsedTime < minLoadingTime) {
+          // If loading was too fast, wait for the remaining time
+          setTimeout(() => {
+            setIsLoading(false);
+          }, minLoadingTime - elapsedTime);
+        } else {
+          // If loading took longer than minimum time, update immediately
+          setIsLoading(false);
+        }
       }
     };
     

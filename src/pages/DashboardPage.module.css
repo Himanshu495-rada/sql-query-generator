@@ -122,12 +122,21 @@
 
 .recentSection,
 .playgroundsSection,
-.queriesSection {
+.playgroundsSection {
   background-color: var(--color-surface);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  padding: 20px;
+  padding: 24px;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.playgroundActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .queriesSection {
@@ -198,53 +207,106 @@
 }
 
 .playgroundsList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .playgroundCard {
   display: flex;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: 10px;
   background-color: var(--color-surface-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .playgroundCard:hover {
-  background-color: var(--color-border);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary-light);
+}
+
+.playgroundHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
 .playgroundIcon {
-  font-size: 24px;
-  margin-right: 16px;
+  font-size: 28px;
+  margin-right: 12px;
+  background-color: var(--color-primary-light);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .playgroundInfo {
   flex: 1;
-  margin-right: 16px;
 }
 
 .playgroundInfo h3 {
   margin: 0 0 5px 0;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .playgroundDetails {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12px;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
   color: var(--color-text-secondary);
+  margin-top: 10px;
+}
+
+.playgroundDetail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailIcon {
+  font-size: 14px;
+  opacity: 0.7;
 }
 
 .playgroundDatabase {
+  display: inline-flex;
+  align-items: center;
   font-weight: 500;
   color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.playgroundTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playgroundQueries {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .sampleQueriesList {
@@ -309,6 +371,10 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  width: 100%;
+  flex: 1;
+  position: relative;
+  min-height: 400px; /* Ensure minimum height even if content is small */
 }
 
 .createPlaygroundForm {
@@ -394,4 +460,33 @@
   .queryActions {
     flex-direction: column;
   }
+}
+
+/* Empty state styling */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--color-text-tertiary, #9aa0a8);
+  border: 1px dashed var(--color-border-light, #e7e9ed);
+  border-radius: 12px;
+  background-color: var(--color-surface-secondary);
+  gap: 12px;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.75;
+  letter-spacing: 0.2px;
+}
+
+.emptyStateIcon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  opacity: 0.4;
 }

@@ -47,19 +47,12 @@ interface PlaygroundData {
   isPublic?: boolean;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: {
-    message: string;
-  };
-}
+// Interface removed as it's not used in this file
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const {
     connections,
-    activeConnection,
     isLoading: isDatabaseLoading,
     loadConnections,
   } = useDatabase();
@@ -78,9 +71,13 @@ const DashboardPage: React.FC = () => {
 
   // Fetch dashboard data on mount
   useEffect(() => {
+    // Define a local function to prevent re-render cycles
     const fetchDashboardData = async () => {
       setIsLoading(true);
       setError(null);
+      
+      // Record the start time to ensure minimum loading time
+      const startTime = Date.now();
       
       try {
         // Load connections if not already loaded
@@ -166,7 +163,7 @@ const DashboardPage: React.FC = () => {
             },
             {
               title: "Connected Databases",
-              value: connections.length,
+              value: connections?.length || 0,
               icon: "🗄️",
               change: { 
                 value: statsResponse.stats.connectionsChange || "0", 
@@ -206,7 +203,7 @@ const DashboardPage: React.FC = () => {
             },
             {
               title: "Connected Databases",
-              value: connections.length,
+              value: connections?.length || 0,
               icon: "🗄️",
               change: { value: "0 new connections", isPositive: true },
             },
@@ -252,12 +249,26 @@ const DashboardPage: React.FC = () => {
           },
         ]);
       } finally {
-        setIsLoading(false);
+        // Calculate elapsed time and enforce minimum loading time of 1 second
+        const elapsedTime = Date.now() - startTime;
+        const minLoadingTime = 1000; // 1 second in milliseconds
+        
+        if (elapsedTime < minLoadingTime) {
+          // If loading was too fast, wait for the remaining time
+          setTimeout(() => {
+            setIsLoading(false);
+          }, minLoadingTime - elapsedTime);
+        } else {
+          // If loading took longer than minimum time, update immediately
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDashboardData();
-  }, [loadConnections, user]);
+    // Remove loadConnections from the dependency array to prevent re-render cycles
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Initialize selected database when connections load
   useEffect(() => {
@@ -367,6 +378,16 @@ const DashboardPage: React.FC = () => {
 
   const isPageLoading = isLoading || isDatabaseLoading;
 
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <div className={styles.dashboardPage}>
       <Navbar
@@ -376,6 +397,8 @@ const DashboardPage: React.FC = () => {
         appName="Dashboard"
         onCreatePlayground={() => setIsCreateModalOpen(true)}
         onDatabaseConnect={handleConnectDatabase}
+        onLogout={handleLogout}
+        onSettingsClick={() => navigate('/settings')}
       />
 
       <div className={styles.mainContainer}>
@@ -500,39 +523,46 @@ const DashboardPage: React.FC = () => {
                 <div className={styles.playgroundsList}>
                   {recentPlaygrounds.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <p>You don't have any playgrounds yet.</p>
-                      <Button 
-                        variant="primary" 
-                        onClick={() => setIsCreateModalOpen(true)}
-                      >
-                        Create Your First Playground
-                      </Button>
+                      <div className={styles.emptyStateIcon}>🧩</div>
+                      <p>No recent playgrounds</p>
                     </div>
                   ) : (
                     recentPlaygrounds.map((playground) => (
                       <div key={playground.id} className={styles.playgroundCard}>
-                        <div className={styles.playgroundIcon}>📊</div>
-                        <div className={styles.playgroundInfo}>
-                          <h3>{playground.name}</h3>
-                          <div className={styles.playgroundDetails}>
+                        <div className={styles.playgroundHeader}>
+                          <div className={styles.playgroundIcon}>🧩</div>
+                          <div className={styles.playgroundInfo}>
+                            <h3>{playground.name}</h3>
+                          </div>
+                        </div>
+                        <div className={styles.playgroundDetails}>
+                          <div className={styles.playgroundDetail}>
                             <span className={styles.playgroundDatabase}>
                               {playground.databaseName}
                             </span>
+                          </div>
+                          <div className={styles.playgroundDetail}>
+                            <span className={styles.detailIcon}>📊</span>
                             <span className={styles.playgroundQueries}>
                               {playground.queryCount} queries
                             </span>
+                          </div>
+                          <div className={styles.playgroundDetail}>
+                            <span className={styles.detailIcon}>🕒</span>
                             <span className={styles.playgroundTime}>
                               {formatRelativeTime(playground.lastUsed)}
                             </span>
                           </div>
                         </div>
-                        <Button
-                          variant="secondary"
-                          size="small"
-                          onClick={() => navigate(`/playground/${playground.id}`)}
-                        >
-                          Open
-                        </Button>
+                        <div className={styles.playgroundActions}>
+                          <Button
+                            variant="primary"
+                            size="small"
+                            onClick={() => navigate(`/playground/${playground.id}`)}
+                          >
+                            Open Playground
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}
