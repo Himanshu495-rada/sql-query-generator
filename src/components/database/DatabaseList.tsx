@@ -163,7 +163,9 @@ const DatabaseList: React.FC<DatabaseListProps> = ({
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Last connected:</span>
                     <span className={styles.detailValue}>
-                      {database.lastConnected.toLocaleString()}
+                      {database.lastConnected instanceof Date 
+                        ? database.lastConnected.toLocaleString() 
+                        : 'Unknown'}
                     </span>
                   </div>
                 )}

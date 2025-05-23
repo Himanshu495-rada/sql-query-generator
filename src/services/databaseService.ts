@@ -51,8 +51,8 @@ export interface DatabaseProcedure {
 
 export interface DatabaseSchema {
   tables: DatabaseTable[];
-  views: DatabaseView[];
-  procedures: DatabaseProcedure[];
+  views?: DatabaseView[];
+  procedures?: DatabaseProcedure[];
 }
 
 export interface ConnectionParams {
@@ -199,9 +199,22 @@ class DatabaseService {
    */
   async refreshSchema(connectionId: string): Promise<DatabaseSchema> {
     try {
-      const response = await api.get<{ schema: DatabaseSchema }>(`connections/${connectionId}/schema`);
-      return response.schema;
+      const response = await api.get(`connections/${connectionId}/schema`);
+      
+      // Check if the schema is nested in data property
+      if (response && response.data && response.data.schema) {
+        console.log("Schema retrieved from API:", response.data.schema);
+        return response.data.schema;
+      } else if (response && response.schema) {
+        console.log("Schema retrieved directly:", response.schema);
+        return response.schema;
+      } else {
+        console.error("Unexpected schema response format:", response);
+        // Return empty schema object to avoid errors
+        return { tables: [] };
+      }
     } catch (error) {
+      console.error("Failed to refresh schema:", error);
       if (error instanceof Error) {
         throw error;
       }
@@ -280,10 +293,48 @@ class DatabaseService {
    * Normalize connection data from API
    */
   private normalizeConnection(connection: any): DatabaseConnection {
+    // Ensure we have a valid connection object
+    if (!connection) {
+      console.warn('Received undefined or null connection object');
+      // Return a minimal valid connection object to avoid errors
+      return {
+        id: 'unknown',
+        name: 'Unknown Connection',
+        type: 'POSTGRESQL' as DatabaseType,
+        status: 'error',
+        lastConnected: null,
+        isSandbox: false
+      };
+    }
+
+    // Handle lastConnected - ensure it's a valid Date or null
+    let lastConnected = null;
+    if (connection.lastConnected) {
+      try {
+        lastConnected = new Date(connection.lastConnected);
+        // Check if the date is valid
+        if (isNaN(lastConnected.getTime())) {
+          lastConnected = null;
+          console.warn('Invalid date for lastConnected:', connection.lastConnected);
+        }
+      } catch (err) {
+        console.warn('Error parsing lastConnected date:', err);
+        lastConnected = null;
+      }
+    }
+
     return {
-      ...connection,
-      lastConnected: connection.lastConnected ? new Date(connection.lastConnected) : null,
+      id: connection.id || 'unknown',
+      name: connection.name || 'Unknown Connection',
+      host: connection.host || 'localhost',
+      port: connection.port,
+      username: connection.username,
+      type: connection.type || 'POSTGRESQL' as DatabaseType,
       status: connection.status || 'connected',
+      lastConnected,
+      isSandbox: !!connection.isSandbox,
+      schema: connection.schema,
+      sandboxDb: connection.sandboxDb
     };
   }
 }

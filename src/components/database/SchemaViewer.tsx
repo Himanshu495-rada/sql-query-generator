@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./SchemaViewer.module.css";
 
 // Schema interfaces
@@ -10,6 +10,7 @@ interface Column {
   isForeignKey: boolean;
   referencedTable?: string;
   referencedColumn?: string;
+  defaultValue?: string;
 }
 
 interface Table {
@@ -29,8 +30,8 @@ interface StoredProcedure {
 
 interface Schema {
   tables: Table[];
-  views: View[];
-  procedures: StoredProcedure[];
+  views?: View[];
+  procedures?: StoredProcedure[];
 }
 
 interface SchemaViewerProps {
@@ -54,6 +55,27 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSystemObjects, setShowSystemObjects] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Debug schema
+  useEffect(() => {
+    console.log("SchemaViewer received schema:", schema);
+  }, [schema]);
+
+  // Initialize by expanding the first table if available
+  useEffect(() => {
+    if (!isInitialized && schema?.tables?.length > 0) {
+      setExpandedItem(schema.tables[0].name);
+      setIsInitialized(true);
+    }
+  }, [schema, isInitialized]);
+
+  // Ensure schema structure is complete
+  const normalizedSchema = {
+    tables: schema?.tables || [],
+    views: schema?.views || [],
+    procedures: schema?.procedures || []
+  };
 
   // Filter functions
   const isSystemObject = (name: string): boolean => {
@@ -74,9 +96,9 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
     );
   };
 
-  const filteredTables = filterBySearchTerm(schema.tables);
-  const filteredViews = filterBySearchTerm(schema.views);
-  const filteredProcedures = filterBySearchTerm(schema.procedures);
+  const filteredTables = filterBySearchTerm(normalizedSchema.tables);
+  const filteredViews = filterBySearchTerm(normalizedSchema.views);
+  const filteredProcedures = filterBySearchTerm(normalizedSchema.procedures);
 
   // Handler functions
   const handleItemClick = (
@@ -102,22 +124,43 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
   };
 
   // Helper rendering functions
-  const renderColumnInfo = (column: Column) => {
+  const renderColumnInfo = (column: Column, tableName: string) => {
     const getColumnIcon = () => {
       if (column.isPrimaryKey) return "🔑";
       if (column.isForeignKey) return "🔗";
       return "📋";
     };
+    
+    const getColumnClass = () => {
+      const classes = [styles.columnItem];
+      if (column.isPrimaryKey) classes.push(styles.primaryKeyColumn);
+      if (column.isForeignKey) classes.push(styles.foreignKeyColumn);
+      return classes.join(' ');
+    };
 
     return (
-      <div className={styles.columnItem} key={column.name}>
+      <div className={getColumnClass()} key={column.name}>
         <div className={styles.columnIcon}>{getColumnIcon()}</div>
         <div className={styles.columnName}>{column.name}</div>
         <div className={styles.columnType}>{column.type}</div>
         {column.nullable && <div className={styles.columnNullable}>NULL</div>}
+        {column.defaultValue && (
+          <div className={styles.columnDefault} title={column.defaultValue}>
+            DEFAULT
+          </div>
+        )}
         {column.isForeignKey && column.referencedTable && (
           <div className={styles.foreignKeyInfo}>
-            → {column.referencedTable}.{column.referencedColumn}
+            → 
+            <span 
+              className={styles.foreignKeyReference}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedItem(column.referencedTable || null);
+              }}
+            >
+              {column.referencedTable}.{column.referencedColumn}
+            </span>
           </div>
         )}
       </div>
@@ -200,7 +243,9 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
               filteredTables.map((table) => (
                 <div key={table.name} className={styles.schemaItem}>
                   <div
-                    className={styles.schemaItemHeader}
+                    className={`${styles.schemaItemHeader} ${
+                      expandedItem === table.name ? styles.expandedHeader : ""
+                    }`}
                     onClick={() => handleItemClick(table.name, "table")}
                   >
                     <div className={styles.itemIcon}>📊</div>
@@ -220,7 +265,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
                         <div className={styles.columnName}>Column</div>
                         <div className={styles.columnType}>Type</div>
                       </div>
-                      {table.columns.map((column) => renderColumnInfo(column))}
+                      {table.columns.map((column) => renderColumnInfo(column, table.name))}
                     </div>
                   )}
                 </div>
@@ -257,7 +302,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
                         <div className={styles.columnName}>Column</div>
                         <div className={styles.columnType}>Type</div>
                       </div>
-                      {view.columns.map((column) => renderColumnInfo(column))}
+                      {view.columns.map((column) => renderColumnInfo(column, view.name))}
                     </div>
                   )}
                 </div>

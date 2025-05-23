@@ -4,6 +4,7 @@ import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
 import ConnectionForm from "../components/database/ConnectionForm";
 import DatabaseList from "../components/database/DatabaseList";
+import SchemaViewer from "../components/database/SchemaViewer";
 import { useAuth } from "../contexts/AuthContext";
 import { useDatabase } from "../contexts/DatabaseContext";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
@@ -119,11 +120,37 @@ const DatabaseConnectionPage: React.FC = () => {
     try {
       setSelectedConnection(databaseId);
       
-      await refreshSchema();
+      // Find the connection in our existing connections list
+      const connection = displayedConnections.find(conn => conn?.id === databaseId);
       
+      // Directly fetch the schema for this connection ID
+      try {
+        // If the ID is valid, make the request directly to avoid using the context's active connection
+        if (databaseId && databaseId !== 'unknown') {
+          const response = await api.get(`connections/${databaseId}/schema`);
+          
+          // Check for correct schema structure in response
+          if (response && response.data && response.data.schema) {
+            console.log("Schema received:", response.data.schema);
+            
+            // Store the schema in the connection object for later display
+            if (connection) {
+              connection.schema = response.data.schema;
+            }
+          } else {
+            console.error("Unexpected schema response format:", response);
+          }
+        } else {
+          console.error("Invalid connection ID:", databaseId);
+        }
+      } catch (schemaError) {
+        console.error("Error fetching schema:", schemaError);
+      }
+      
+      // Open the modal regardless - it will show loading state if schema isn't available
       setIsViewSchemaModalOpen(true);
     } catch (err) {
-      console.error("Error refreshing schema:", err);
+      console.error("Error handling view schema:", err);
     }
   };
 
@@ -149,7 +176,10 @@ const DatabaseConnectionPage: React.FC = () => {
   const getConnectionSchema = () => {
     if (!selectedConnection) return null;
     
-    const connection = connections?.find(c => c.id === selectedConnection);
+    // Find the connection in our displayed connections list
+    const connection = displayedConnections.find(conn => conn?.id === selectedConnection);
+    
+    // Return the schema if it exists
     return connection?.schema || null;
   };
 
@@ -157,6 +187,31 @@ const DatabaseConnectionPage: React.FC = () => {
   const displayedConnections = Array.isArray(connections) && connections.length > 0 
     ? connections 
     : (Array.isArray(localConnections) ? localConnections : []);
+    
+  // Ensure all connections have required properties to avoid rendering errors
+  const safeConnections = displayedConnections
+    .map(conn => {
+      if (!conn) return null;
+      // Create a valid Database object with all required fields
+      return {
+        id: conn.id || 'unknown',
+        name: conn.name || 'Unknown Connection',
+        type: conn.type || 'POSTGRESQL',
+        host: conn.host || 'localhost',
+        status: conn.status || 'error',
+        lastConnected: conn.lastConnected || null,
+        isSandbox: !!conn.isSandbox
+      };
+    })
+    .filter(Boolean) as { // Type assertion to match Database interface
+      id: string;
+      name: string;
+      type: string;
+      host: string;
+      status: "connected" | "disconnected" | "error";
+      lastConnected: Date | null;
+      isSandbox: boolean;
+    }[];
     
   const isLoadingConnections = isLoading || localLoading;
 
@@ -176,11 +231,11 @@ const DatabaseConnectionPage: React.FC = () => {
       />
 
       <div className={styles.mainContainer}>
-        {isSidebarVisible && displayedConnections && (
+        {isSidebarVisible && safeConnections && (
           <Sidebar
             isVisible={isSidebarVisible}
             playgrounds={[]} 
-            databases={(displayedConnections || []).map((conn) => ({
+            databases={(safeConnections || []).map((conn) => ({
               id: conn?.id || 'unknown',
               name: conn?.name || 'Unknown Connection',
               status: conn?.status || "connected",
@@ -202,7 +257,7 @@ const DatabaseConnectionPage: React.FC = () => {
             </p>
           </div>
 
-          {isLoadingConnections && (!displayedConnections || displayedConnections.length === 0) ? (
+          {isLoadingConnections && (!safeConnections || safeConnections.length === 0) ? (
             <div className={styles.loadingContainer}>
               <LoadingSpinner
                 size="large"
@@ -224,7 +279,7 @@ const DatabaseConnectionPage: React.FC = () => {
                 <h2>Your Connections</h2>
                 {error && <div className={styles.errorMessage}>{error}</div>}
 
-                {!displayedConnections || displayedConnections.length === 0 ? (
+                {!safeConnections || safeConnections.length === 0 ? (
                   <div className={styles.emptyState}>
                     <p>You don't have any database connections yet.</p>
                     <p>
@@ -234,7 +289,7 @@ const DatabaseConnectionPage: React.FC = () => {
                   </div>
                 ) : (
                   <DatabaseList
-                    databases={displayedConnections}
+                    databases={safeConnections}
                     onConnect={handleDisconnect}
                     onDisconnect={handleDisconnect}
                     onViewSchema={handleViewSchema}
@@ -287,31 +342,24 @@ const DatabaseConnectionPage: React.FC = () => {
       >
         <div className={styles.schemaModalContent}>
           {selectedConnection && (
-            <div>
+            <>
               {getConnectionSchema() ? (
-                <div className={styles.schemaViewer}>
-                  <h3>Tables</h3>
-                  <ul className={styles.tableList}>
-                    {getConnectionSchema()?.tables?.map(table => (
-                      <li key={table.name} className={styles.tableItem}>
-                        <strong>{table.name}</strong>
-                        <ul className={styles.columnList}>
-                          {table.columns?.map(column => (
-                            <li key={column.name} className={styles.columnItem}>
-                              {column.name} ({column.type})
-                              {column.isPrimaryKey && ' 🔑'}
-                              {column.isForeignKey && ' 🔗'}
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <SchemaViewer
+                  schema={{
+                    tables: getConnectionSchema()?.tables || [],
+                    views: getConnectionSchema()?.views || [],
+                    procedures: getConnectionSchema()?.procedures || []
+                  }}
+                  databaseName={safeConnections.find(conn => conn.id === selectedConnection)?.name || 'Database'}
+                  databaseType={safeConnections.find(conn => conn.id === selectedConnection)?.type || 'Unknown'}
+                />
               ) : (
-                <p>Loading schema or no schema available for this connection.</p>
+                <div className={styles.schemaLoading}>
+                  <LoadingSpinner size="medium" color="primary" />
+                  <p>Loading schema or no schema available for this connection.</p>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </Modal>

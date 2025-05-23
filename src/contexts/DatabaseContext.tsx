@@ -13,11 +13,11 @@ import databaseService, {
 
 // Updated database type as a const object to be compatible with erasableSyntaxOnly
 export const DatabaseType = {
-  MYSQL: "mysql",
-  POSTGRESQL: "postgresql",
-  SQLITE: "sqlite",
-  MONGODB: "mongodb",
-  SAMPLE: "sample"
+  MYSQL: "MYSQL",
+  POSTGRESQL: "POSTGRESQL",
+  SQLITE: "SQLITE",
+  MONGODB: "MONGODB",
+  SAMPLE: "SAMPLE"
 } as const;
 
 // Create a type from the object values

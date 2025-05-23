@@ -3,6 +3,9 @@
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .schemaHeader {
@@ -13,6 +16,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  background-color: #f8f9fa;
 }
 
 .schemaInfo {
@@ -97,8 +101,9 @@
 }
 
 .schemaContent {
-  max-height: 500px;
+  flex: 1;
   overflow-y: auto;
+  max-height: calc(70vh - 120px);
 }
 
 .schemaItem {
@@ -214,10 +219,43 @@
   font-style: italic;
 }
 
+.primaryKeyColumn {
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.foreignKeyColumn {
+  background-color: rgba(46, 204, 113, 0.05);
+}
+
+.foreignKeyReference {
+  color: #2980b9;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+.foreignKeyReference:hover {
+  color: #3498db;
+}
+
+.columnDefault {
+  font-size: 12px;
+  color: #8e44ad;
+  padding: 2px 6px;
+  background-color: rgba(142, 68, 173, 0.1);
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.expandedHeader {
+  background-color: #edf1f7;
+}
+
 @media (max-width: 768px) {
   .schemaHeader {
     flex-direction: column;
     align-items: flex-start;
+    padding: 12px 16px;
   }
 
   .schemaSearch {
@@ -231,6 +269,18 @@
 
   .schemaTabs {
     overflow-x: auto;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  
+  .schemaTab {
+    padding: 10px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .schemaContent {
+    max-height: calc(60vh - 120px);
   }
 
   .columnHeader,
@@ -238,14 +288,32 @@
   .columnItem,
   .paramItem {
     flex-wrap: wrap;
+    gap: 4px;
   }
 
   .columnName,
-  .paramName,
+  .paramName {
+    width: 100%;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #2c3e50;
+  }
+
   .columnType,
   .paramType {
     width: auto;
-    margin-right: 16px;
-    margin-bottom: 4px;
+    padding: 2px 6px;
+    background-color: #e6f7ff;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  
+  .columnNullable {
+    margin-left: 8px;
+  }
+  
+  .foreignKeyInfo {
+    width: 100%;
+    margin-top: 4px;
   }
 }
