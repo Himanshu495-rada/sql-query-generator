@@ -15,6 +15,7 @@ import { useDatabase } from "../contexts/DatabaseContext";
 import usePlayground from "../hooks/usePlayground";
 import { formatSql, isDmlQuery } from "../utils/sqlFormatter";
 import playgroundService from "../services/playgroundService";
+import { Playground, PlaygroundConnection } from "../services/playgroundService";
 
 // Define interfaces for the playground data structure
 interface PlaygroundItem {
@@ -28,7 +29,7 @@ const PlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { connections, activeConnection, setActiveConnection } = useDatabase();
+  const { connections, activeConnection, setActiveConnection, refreshSchema } = useDatabase();
   const {
     playground,
     createPlayground,
@@ -52,6 +53,7 @@ const PlaygroundPage: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [isDbExplorerVisible, setIsDbExplorerVisible] = useState(true);
+  const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [activeTab, setActiveTab] = useState("sql"); // 'sql' or 'explanation'
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -139,7 +141,7 @@ const PlaygroundPage: React.FC = () => {
   ];
 
   // Add sample data for testing
-  const [sampleResults] = useState(results);
+  const [sampleResults] = useState([]);
   
   // State for recent playgrounds to show in sidebar
   const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>([]);
@@ -186,13 +188,16 @@ const PlaygroundPage: React.FC = () => {
         const playgroundsData = await playgroundService.getPlaygrounds();
         // Sort by lastUpdated to show most recent first
         const sortedPlaygrounds = [...playgroundsData].sort(
-          (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
+        
         setRecentPlaygrounds(sortedPlaygrounds.map(pg => ({
           id: pg.id,
           name: pg.name,
-          lastUsed: pg.lastUpdated,
-          databaseName: connections.find(c => c.id === pg.databaseId)?.name || 'No database'
+          lastUsed: new Date(pg.updatedAt),
+          databaseName: pg.connections?.length > 0 
+            ? pg.connections.map(conn => conn.connection.name).join(", ")
+            : 'No database'
         })));
       } catch (error) {
         console.error('Error fetching playgrounds:', error);
@@ -206,7 +211,7 @@ const PlaygroundPage: React.FC = () => {
   const handleCreateNewPlayground = useCallback(() => {
     const newPlayground = createPlayground(
       "New Playground",
-      activeConnection?.id || null
+      activeConnection ? [activeConnection.id] : undefined
     );
     navigate(`/playground/${newPlayground.id}`);
   }, [createPlayground, activeConnection, navigate]);
@@ -228,16 +233,54 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Handle database change
-  const handleDatabaseChange = (databaseId: string) => {
-    if (playground) {
-      savePlayground({ databaseId });
-      // Find the database connection object by ID
-      const connection = connections.find(conn => conn.id === databaseId);
-      if (connection) {
-        setActiveConnection(connection);
+  const handleDatabaseChange = async (databaseId: string) => {
+    if (playground && id) {
+      try {
+        // Find the database connection object by ID
+        const connection = connections.find(conn => conn.id === databaseId);
+        console.log('Changing to database:', connection);
+        if (connection) {
+          setIsLoadingSchema(true);
+          setActiveConnection(connection);
+          
+          // Load the schema for the selected database
+          try {
+            await refreshSchema();
+            console.log('Schema loaded after database change:', connection.schema);
+          } catch (error) {
+            console.error('Error loading schema:', error);
+          } finally {
+            setIsLoadingSchema(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error changing database:', error);
+        setIsLoadingSchema(false);
       }
     }
   };
+
+  // Effect to load schema when active connection changes
+  useEffect(() => {
+    const loadSchema = async () => {
+      if (activeConnection && !activeConnection.schema) {
+        console.log('Loading schema for connection:', activeConnection);
+        setIsLoadingSchema(true);
+        try {
+          await refreshSchema();
+          console.log('Schema loaded successfully:', activeConnection.schema);
+        } catch (error) {
+          console.error('Error loading schema:', error);
+        } finally {
+          setIsLoadingSchema(false);
+        }
+      } else if (activeConnection?.schema) {
+        console.log('Using existing schema:', activeConnection.schema);
+      }
+    };
+
+    loadSchema();
+  }, [activeConnection, refreshSchema]);
 
   // Handle query execution
   const handleExecuteQuery = async () => {
@@ -336,6 +379,12 @@ const PlaygroundPage: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isActionsDropdownOpen]);
+
+  // Add a function to get active connections for the current playground
+  const getPlaygroundConnections = useCallback(() => {
+    if (!playground) return [];
+    return playground.connections?.map(conn => conn.connection) || [];
+  }, [playground]);
 
   return (
     <div className={styles.playgroundPage}>
@@ -486,7 +535,7 @@ const PlaygroundPage: React.FC = () => {
             </div>
           </div>
 
-          {!activeConnection ? (
+          {!playground?.connections.length ? (
             <div className={styles.noConnectionState}>
               <div className={styles.noConnectionIcon}>🔌</div>
               <h2>No Database Connected</h2>
@@ -497,42 +546,52 @@ const PlaygroundPage: React.FC = () => {
             </div>
           ) : (
             <div className={styles.playgroundLayout}>
-              {isDbExplorerVisible && activeConnection?.schema && (
+              {isDbExplorerVisible && activeConnection && (
                 <div className={styles.databaseExplorerContainer}>
-                  <DatabaseExplorer
-                    databases={[
-                      {
-                        id: activeConnection.id,
-                        name: activeConnection.name,
-                        tables: activeConnection.schema.tables || [],
-                        views: activeConnection.schema.views || [],
-                      },
-                    ]}
-                    activeDatabase={activeConnection.id}
-                    onDatabaseChange={(id) => setActiveConnection(id)}
-                    onTableSelect={(tableName) => {
-                      const table = activeConnection.schema?.tables.find(
-                        (t) => t.name === tableName
-                      );
-                      if (table) {
-                        const columns = table.columns
-                          .map((c) => c.name)
-                          .join(", ");
-                        const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
-                        setCurrentSql(formatSql(sql));
-                      }
-                    }}
-                    onColumnSelect={(tableName, columnName) => {
-                      const currentSql = playground?.currentSql || "";
-                      if (!currentSql.includes(columnName)) {
-                        // This is a simple way to add a column to the query
-                        // In a real app, you'd want to use a SQL parser to update the query properly
-                        setCurrentSql(
-                          `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
+                  {isLoadingSchema ? (
+                    <div className={styles.loadingState}>
+                      <div className={styles.spinner}></div>
+                      <p>Loading database schema...</p>
+                    </div>
+                  ) : (
+                    <DatabaseExplorer
+                      databases={[
+                        {
+                          id: activeConnection.id,
+                          name: activeConnection.name,
+                          tables: activeConnection.schema?.tables || [],
+                          views: activeConnection.schema?.views || [],
+                        },
+                      ]}
+                      activeDatabase={activeConnection.id}
+                      onDatabaseChange={(id) => {
+                        const connection = connections.find(conn => conn.id === id);
+                        if (connection) {
+                          setActiveConnection(connection);
+                        }
+                      }}
+                      onTableSelect={(tableName) => {
+                        const table = activeConnection.schema?.tables.find(
+                          (t) => t.name === tableName
                         );
-                      }
-                    }}
-                  />
+                        if (table) {
+                          const columns = table.columns
+                            .map((c) => c.name)
+                            .join(", ");
+                          const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
+                          setCurrentSql(formatSql(sql));
+                        }
+                      }}
+                      onColumnSelect={(tableName, columnName) => {
+                        const currentSql = playground?.currentSql || "";
+                        if (!currentSql.includes(columnName)) {
+                          setCurrentSql(
+                            `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
+                          );
+                        }
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -628,7 +687,7 @@ const PlaygroundPage: React.FC = () => {
                 <div className={styles.historyContainer}>
                   <QueryHistory
                     history={playground?.history || []}
-                    onSelectQuery={(item: QueryHistoryItem) => selectHistoryItem(item.id)}
+                    onSelectQuery={(item: QueryHistoryItem) => selectHistoryItem(Number(item.id))}
                     onClearHistory={clearHistory}
                   />
                 </div>

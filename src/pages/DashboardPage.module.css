@@ -524,3 +524,33 @@
   margin-bottom: 8px;
   opacity: 0.4;
 }
+
+.databaseSelectionList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.databaseSelectionItem {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.databaseSelectionItem:hover {
+  background-color: var(--hover-bg-color);
+}
+
+.databaseSelectionItem input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.databaseSelectionItem label {
+  cursor: pointer;
+  flex: 1;
+}

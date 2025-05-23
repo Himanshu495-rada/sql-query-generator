@@ -1,15 +1,22 @@
 import api from "../utils/api";
+import { DatabaseConnection } from './databaseService';
 
 // Types for playground operations
+export interface PlaygroundConnection {
+  playgroundId: string;
+  connectionId: string;
+  createdAt: string;
+  connection: DatabaseConnection;
+}
+
 export interface Playground {
   id: string;
   name: string;
-  databaseId: string | null;
-  currentSql: string;
-  currentPrompt: string;
-  currentExplanation: string;
-  history: QueryHistoryItem[];
-  lastUpdated: Date;
+  description?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  connections: PlaygroundConnection[];
 }
 
 export interface QueryHistoryItem {
@@ -103,24 +110,19 @@ class PlaygroundService {
       console.log(`Fetching playground with ID ${id}`);
       const response = await api.get(`playgrounds/${id}`);
       
-      // Check if API returned valid data
-      if (response?.data?.success === true && response?.data?.data?.playground) {
-        const playgroundData = response.data.data.playground;
+      // Check if API returned valid data in the expected format
+      if (response?.success === true && response?.data?.playground) {
+        const playgroundData = response.data.playground;
         
         // Format the playground data to match the Playground interface
         return {
           id: playgroundData.id,
           name: playgroundData.name,
-          databaseId: playgroundData.connections && playgroundData.connections.length > 0 ? 
-            playgroundData.connections[0]?.connectionId : null,
-          currentSql: playgroundData.currentSql || '',
-          currentPrompt: playgroundData.currentPrompt || '',
-          currentExplanation: playgroundData.currentExplanation || '',
-          history: Array.isArray(playgroundData.history) ? playgroundData.history.map((item: any) => ({
-            ...item,
-            timestamp: new Date(item.timestamp || Date.now()),
-          })) : [],
-          lastUpdated: new Date(playgroundData.updatedAt || playgroundData.createdAt || Date.now()),
+          description: playgroundData.description,
+          userId: playgroundData.userId,
+          createdAt: playgroundData.createdAt,
+          updatedAt: playgroundData.updatedAt,
+          connections: playgroundData.connections || []
         };
       }
       
@@ -216,6 +218,19 @@ class PlaygroundService {
     } catch (error) {
       console.error(`Error deleting playground with ID ${id}:`, error);
       return false; // Return false on error
+    }
+  }
+
+  /**
+   * Add a connection to a playground
+   */
+  async addConnectionToPlayground(playgroundId: string, connectionId: string): Promise<Playground> {
+    try {
+      const response = await api.post(`playgrounds/${playgroundId}/connections`, { connectionId });
+      return response.data.playground;
+    } catch (error) {
+      console.error('Error adding connection to playground:', error);
+      throw error;
     }
   }
 }

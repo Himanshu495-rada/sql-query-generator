@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import useDatabase from "./useDatabase";
 import useAi from "./useAi";
-import playgroundService from "../services/playgroundService";
+import playgroundService, { Playground } from "../services/playgroundService";
+import { DatabaseConnection } from '../services/databaseService';
 
 interface QueryHistoryItem {
   id: string;
@@ -16,38 +17,47 @@ interface QueryHistoryItem {
   explanation?: string;
 }
 
-interface Playground {
-  id: string;
-  name: string;
-  databaseId: string | null;
+interface PlaygroundState extends Playground {
   currentSql: string;
   currentPrompt: string;
   currentExplanation: string;
   history: QueryHistoryItem[];
-  lastUpdated: Date;
+}
+
+interface PlaygroundStateUpdate {
+  currentSql?: string;
+  currentPrompt?: string;
+  currentExplanation?: string;
+  history?: QueryHistoryItem[];
+}
+
+interface PlaygroundServerUpdate extends Partial<Playground> {
+  currentSql?: string;
+  currentPrompt?: string;
+  currentExplanation?: string;
+  history?: QueryHistoryItem[];
 }
 
 interface UsePlaygroundReturn {
-  playground: Playground | null;
-  createPlayground: (name: string, databaseId?: string | null) => Playground;
-  savePlayground: (updates?: Partial<Playground>) => void;
+  playground: PlaygroundState | null;
+  createPlayground: (name: string, connections?: string[]) => PlaygroundState;
+  savePlayground: (updates: PlaygroundServerUpdate) => Promise<void>;
   executeQuery: () => Promise<void>;
   generateSqlFromPrompt: (prompt: string) => Promise<void>;
   setCurrentSql: (sql: string) => void;
   isExecuting: boolean;
   isGenerating: boolean;
-  queryResults: Record<string, any>[] | null;
+  queryResults: any[] | null;
   error: string | null;
   clearHistory: () => void;
-  selectHistoryItem: (itemId: string) => void;
+  selectHistoryItem: (index: number) => void;
 }
 
-const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
-  const [playground, setPlayground] = useState<Playground | null>(null);
-  const [queryResults, setQueryResults] = useState<
-    Record<string, any>[] | null
-  >(null);
+export default function usePlayground(id?: string): UsePlaygroundReturn {
+  const [playground, setPlayground] = useState<PlaygroundState | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [queryResults, setQueryResults] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Rename the imported executeQuery to dbExecuteQuery to avoid naming conflict
@@ -57,140 +67,117 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
     setActiveConnection,
     connections,
   } = useDatabase();
-  const { generateSql, isGenerating } = useAi();
+  const { generateSql } = useAi();
 
-  // Load saved playground data when playgroundId changes
+  // Load playground data
   useEffect(() => {
-    if (playgroundId) {
-      loadPlayground(playgroundId);
-    } else {
-      setPlayground(null);
-      setQueryResults(null);
-    }
-  }, [playgroundId]);
+    if (!id) return;
 
-  // Load playground from API or localStorage as fallback
-  const loadPlayground = useCallback(
-    async (id: string) => {
-      // Set loading state while fetching
-      setIsExecuting(true);
-      setError(null);
-      
+    const loadPlayground = async () => {
       try {
-        // First try to load from the API
-        try {
-          const playground = await playgroundService.getPlayground(id);
-          
-          setPlayground(playground);
-          
-          // Set active connection if the playground has a database
-          if (playground.databaseId) {
-            // Find the connection in the loaded connections list
-            const connectionToActivate = connections.find(conn => conn.id === playground.databaseId);
-            if (connectionToActivate) {
-              setActiveConnection(connectionToActivate);
-            }
-          }
-          
-          return;
-        } catch (apiError) {
-          console.log('Could not load playground from API, falling back to localStorage:', apiError);
-          // If API fails, try localStorage as fallback
+        const data = await playgroundService.getPlayground(id);
+        if (!data) {
+          throw new Error('Invalid playground data received');
         }
         
-        // Try to load from localStorage
-        const savedData = localStorage.getItem(`playground_${id}`);
+        // Initialize UI state when loading from server
+        const playgroundState: PlaygroundState = {
+          ...data,
+          currentSql: '',
+          currentPrompt: '',
+          currentExplanation: '',
+          history: []
+        };
+        setPlayground(playgroundState);
 
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-
-          // Fix dates that were serialized to strings
-          const playground: Playground = {
-            ...parsedData,
-            lastUpdated: new Date(parsedData.lastUpdated),
-            history: parsedData.history.map((item: any) => ({
-              ...item,
-              timestamp: new Date(item.timestamp),
-            })),
-          };
-
-          setPlayground(playground);
-
-          // Set active connection if the playground has a database
-          if (playground.databaseId) {
-            // Find the connection in the loaded connections list
-            const connectionToActivate = connections.find(conn => conn.id === playground.databaseId);
-            if (connectionToActivate) {
-              setActiveConnection(connectionToActivate);
-            }
-          }
-        } else {
-          setError(`Playground with ID ${id} not found`);
+        // Set active connection if available
+        if (data.connections && data.connections.length > 0) {
+          const firstConnection = data.connections[0].connection;
+          setActiveConnection(firstConnection);
         }
-      } catch (err) {
-        setError("Failed to load playground data");
-        console.error("Error loading playground:", err);
+      } catch (error) {
+        console.error('Error loading playground:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load playground');
       }
-    },
-    [setActiveConnection]
-  );
+    };
+
+    loadPlayground();
+  }, [id, setActiveConnection]);
 
   // Create a new playground
-  const createPlayground = useCallback(
-    (name: string, databaseId: string | null = null): Playground => {
-      const newPlayground: Playground = {
-        id: uuidv4(),
-        name,
-        databaseId,
-        currentSql: "",
-        currentPrompt: "",
-        currentExplanation: "",
-        history: [],
-        lastUpdated: new Date(),
-      };
-
-      // Save to localStorage (or eventually to backend)
-      localStorage.setItem(
-        `playground_${newPlayground.id}`,
-        JSON.stringify(newPlayground)
-      );
-
-      // Update local state
-      setPlayground(newPlayground);
-      setQueryResults(null);
-
-      // If a database ID was provided, set it as the active connection
-      if (databaseId) {
-        setActiveConnection(databaseId);
-      }
-
-      return newPlayground;
-    },
-    [setActiveConnection]
-  );
+  const createPlayground = (name: string, connections?: string[]): PlaygroundState => {
+    const newPlayground: PlaygroundState = {
+      id: uuidv4(),
+      name,
+      userId: '', // This will be set by the backend
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      connections: [],
+      // UI state
+      currentSql: '',
+      currentPrompt: '',
+      currentExplanation: '',
+      history: []
+    };
+    setPlayground(newPlayground);
+    return newPlayground;
+  };
 
   // Save playground changes
-  const savePlayground = useCallback(
-    (updates: Partial<Playground> = {}) => {
-      if (!playground) return;
+  const savePlayground = async (updates: PlaygroundServerUpdate): Promise<void> => {
+    if (!playground) return;
 
-      const updatedPlayground = {
-        ...playground,
-        ...updates,
-        lastUpdated: new Date(),
+    try {
+      // Only send server-relevant fields to the API
+      const serverUpdates: PlaygroundServerUpdate = {
+        name: updates.name,
+        description: updates.description,
+        currentSql: updates.currentSql,
+        currentPrompt: updates.currentPrompt,
+        currentExplanation: updates.currentExplanation,
+        history: updates.history,
       };
 
-      // Save to localStorage (or eventually to backend)
-      localStorage.setItem(
-        `playground_${updatedPlayground.id}`,
-        JSON.stringify(updatedPlayground)
-      );
+      const updatedPlayground = await playgroundService.updatePlayground(playground.id, serverUpdates);
+      
+      // Merge the server response with our local UI state
+      setPlayground(prev => prev ? {
+        ...prev,
+        ...updatedPlayground,
+      } : null);
+    } catch (error) {
+      console.error('Error saving playground:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save playground');
+    }
+  };
 
-      // Update local state
-      setPlayground(updatedPlayground);
-    },
-    [playground]
-  );
+  // Update local playground state
+  const updateLocalState = (updates: PlaygroundStateUpdate) => {
+    setPlayground(prev => prev ? { ...prev, ...updates } : null);
+  };
+
+  // Set current SQL
+  const setCurrentSql = useCallback((sql: string) => {
+    updateLocalState({ currentSql: sql });
+  }, []);
+
+  // Clear history
+  const clearHistory = useCallback(() => {
+    updateLocalState({ history: [] });
+  }, []);
+
+  // Select history item
+  const selectHistoryItem = useCallback((index: number) => {
+    if (!playground) return;
+    const item = playground.history[index];
+    if (!item) return;
+
+    updateLocalState({
+      currentSql: item.sql,
+      currentPrompt: item.prompt || '',
+      currentExplanation: item.explanation || ''
+    });
+  }, [playground]);
 
   // Execute SQL query
   const executeQuery = useCallback(async () => {
@@ -280,38 +267,6 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
     [playground, generateSql, savePlayground]
   );
 
-  // Update current SQL
-  const setCurrentSql = useCallback(
-    (sql: string) => {
-      if (!playground) return;
-      savePlayground({ currentSql: sql });
-    },
-    [playground, savePlayground]
-  );
-
-  // Clear history
-  const clearHistory = useCallback(() => {
-    if (!playground) return;
-    savePlayground({ history: [] });
-  }, [playground, savePlayground]);
-
-  // Select a history item to restore
-  const selectHistoryItem = useCallback(
-    (itemId: string) => {
-      if (!playground) return;
-
-      const item = playground.history.find((h) => h.id === itemId);
-      if (!item) return;
-
-      savePlayground({
-        currentSql: item.sql,
-        currentPrompt: item.prompt,
-        currentExplanation: item.explanation || "",
-      });
-    },
-    [playground, savePlayground]
-  );
-
   return {
     playground,
     createPlayground,
@@ -326,6 +281,4 @@ const usePlayground = (playgroundId?: string): UsePlaygroundReturn => {
     clearHistory,
     selectHistoryItem,
   };
-};
-
-export default usePlayground;
+}

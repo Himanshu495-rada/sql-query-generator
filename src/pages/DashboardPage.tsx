@@ -42,7 +42,7 @@ interface RecentPlayground {
 
 interface PlaygroundData {
   name: string;
-  connectionId: string; 
+  connections: string[];  // Changed from connectionIds to connections
   description?: string;
   isPublic?: boolean;
 }
@@ -59,7 +59,7 @@ const DashboardPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaygroundName, setNewPlaygroundName] = useState("");
   const [newPlaygroundDescription, setNewPlaygroundDescription] = useState("");
-  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+  const [selectedDatabaseIds, setSelectedDatabaseIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingPlayground, setIsCreatingPlayground] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -395,10 +395,10 @@ const DashboardPage: React.FC = () => {
 
   // Initialize selected database when connections load
   useEffect(() => {
-    if (connections && connections.length > 0 && !selectedDatabaseId) {
-      setSelectedDatabaseId(connections[0].id);
+    if (connections && connections.length > 0 && selectedDatabaseIds.length === 0) {
+      setSelectedDatabaseIds(connections.map(conn => conn.id));
     }
-  }, [connections, selectedDatabaseId]);
+  }, [connections, selectedDatabaseIds]);
 
   // Format the relative time for display (e.g. "5 minutes ago")
   const formatRelativeTime = (date: Date): string => {
@@ -447,8 +447,8 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    if (!selectedDatabaseId) {
-      alert("Please select a database connection");
+    if (selectedDatabaseIds.length === 0) {
+      alert("Please select at least one database connection");
       return;
     }
 
@@ -457,7 +457,7 @@ const DashboardPage: React.FC = () => {
     try {
       const playgroundData: PlaygroundData = {
         name: newPlaygroundName.trim(),
-        connectionId: selectedDatabaseId,
+        connections: selectedDatabaseIds,  // Changed from connectionIds to connections
         description: newPlaygroundDescription.trim() || undefined
       };
 
@@ -511,7 +511,13 @@ const DashboardPage: React.FC = () => {
 
   // Handle selecting a database
   const handleDatabaseClick = (id: string) => {
-    setSelectedDatabaseId(id);
+    setSelectedDatabaseIds(prevIds => {
+      if (prevIds.includes(id)) {
+        return prevIds.filter(i => i !== id);
+      } else {
+        return [...prevIds, id];
+      }
+    });
   };
 
   // Handle sidebar toggle (mobile view)
@@ -521,38 +527,23 @@ const DashboardPage: React.FC = () => {
   
   // Update stats when connections change to fix the database count issue on refresh
   useEffect(() => {
-    // This effect updates the 'Connected Databases' stat count when 'connections' change.
-    // It relies on 'stats' being already populated with a 'Connected Databases' card
-    // from the initial data load.
-    if (connections) { // Ensure connections array is available
+    // Only update if we have both stats and connections available
+    if (stats.length > 0 && connections) {
       setStats(prevStats => {
-        // If prevStats isn't populated yet, do nothing.
-        // The initial population of stats should handle the first value.
-        if (prevStats.length === 0) {
-          return prevStats;
+        const newStats = [...prevStats];
+        const dbStatsIndex = newStats.findIndex(stat => stat.title === "Connected Databases");
+        
+        if (dbStatsIndex !== -1 && newStats[dbStatsIndex].value !== connections.length) {
+          newStats[dbStatsIndex] = {
+            ...newStats[dbStatsIndex],
+            value: connections.length
+          };
+          return newStats;
         }
-
-        const newConnectionCount = connections.length;
-        let needsUpdate = false;
-
-        const updatedStats = prevStats.map(stat => {
-          if (stat.title === "Connected Databases") {
-            if (stat.value !== newConnectionCount) {
-              needsUpdate = true;
-              return { ...stat, value: newConnectionCount };
-            }
-          }
-          return stat;
-        });
-
-        if (needsUpdate) {
-          console.log('DashboardPage: Updated "Connected Databases" stat value to', newConnectionCount);
-          return updatedStats;
-        }
-        return prevStats; // No change needed, return the same stats array
+        return prevStats;
       });
     }
-  }, [connections]); // Dependency: only 'connections'
+  }, [connections, stats]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -791,7 +782,7 @@ const DashboardPage: React.FC = () => {
             confirmText="Create"
             onCancel={() => setIsCreateModalOpen(false)}
             onConfirm={handleCreatePlayground}
-            confirmDisabled={!newPlaygroundName.trim() || !selectedDatabaseId || isCreatingPlayground}
+            confirmDisabled={!newPlaygroundName.trim() || selectedDatabaseIds.length === 0 || isCreatingPlayground}
             isConfirmLoading={isCreatingPlayground}
           />
         }
@@ -819,29 +810,29 @@ const DashboardPage: React.FC = () => {
             />
           </div>
           <div className={styles.formGroup}>
-            <label htmlFor="database-select">Database Connection*</label>
-            <select
-              id="database-select"
-              value={selectedDatabaseId || ""}
-              onChange={(e) => setSelectedDatabaseId(e.target.value)}
-            >
-              <option value="" disabled>
-                Select a database
-              </option>
+            <label htmlFor="database-select">Database Connections*</label>
+            <div className={styles.databaseSelectionList}>
               {(connections || []).map((connection) => (
-                <option key={connection.id} value={connection.id}>
-                  {connection.name}{" "}
-                  {connection.status !== "connected"
-                    ? `(${connection.status})`
-                    : ""}
-                </option>
+                <div key={connection.id} className={styles.databaseSelectionItem}>
+                  <input
+                    type="checkbox"
+                    id={`db-${connection.id}`}
+                    checked={selectedDatabaseIds.includes(connection.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedDatabaseIds([...selectedDatabaseIds, connection.id]);
+                      } else {
+                        setSelectedDatabaseIds(selectedDatabaseIds.filter(id => id !== connection.id));
+                      }
+                    }}
+                  />
+                  <label htmlFor={`db-${connection.id}`}>
+                    {connection.name}{" "}
+                    {connection.status !== "connected" ? `(${connection.status})` : ""}
+                  </label>
+                </div>
               ))}
-              {(!connections || connections.length === 0) && (
-                <option value="" disabled>
-                  No databases connected
-                </option>
-              )}
-            </select>
+            </div>
             {(!connections || connections.length === 0) && (
               <div className={styles.formNote}>
                 You need to connect a database first.

@@ -171,10 +171,9 @@ class DatabaseService {
         return [];
       }
       
-      return connections.map(this.normalizeConnection);
+      return connections.map(conn => this.normalizeConnection(conn));
     } catch (error) {
       console.error('Failed to get connections:', error);
-      // Instead of throwing, return empty array to avoid breaking the UI
       return [];
     }
   }
@@ -290,51 +289,26 @@ class DatabaseService {
   }
   
   /**
-   * Normalize connection data from API
+   * Normalize a connection object from the API
    */
   private normalizeConnection(connection: any): DatabaseConnection {
-    // Ensure we have a valid connection object
-    if (!connection) {
-      console.warn('Received undefined or null connection object');
-      // Return a minimal valid connection object to avoid errors
-      return {
-        id: 'unknown',
-        name: 'Unknown Connection',
-        type: 'POSTGRESQL' as DatabaseType,
-        status: 'error',
-        lastConnected: null,
-        isSandbox: false
-      };
-    }
-
-    // Handle lastConnected - ensure it's a valid Date or null
-    let lastConnected = null;
-    if (connection.lastConnected) {
-      try {
-        lastConnected = new Date(connection.lastConnected);
-        // Check if the date is valid
-        if (isNaN(lastConnected.getTime())) {
-          lastConnected = null;
-          console.warn('Invalid date for lastConnected:', connection.lastConnected);
-        }
-      } catch (err) {
-        console.warn('Error parsing lastConnected date:', err);
-        lastConnected = null;
-      }
-    }
+    // Handle case where connection might be nested in a playground connection
+    const connData = connection.connection || connection;
 
     return {
-      id: connection.id || 'unknown',
-      name: connection.name || 'Unknown Connection',
-      host: connection.host || 'localhost',
-      port: connection.port,
-      username: connection.username,
-      type: connection.type || 'POSTGRESQL' as DatabaseType,
-      status: connection.status || 'connected',
-      lastConnected,
-      isSandbox: !!connection.isSandbox,
-      schema: connection.schema,
-      sandboxDb: connection.sandboxDb
+      id: connData.id,
+      name: connData.name,
+      type: connData.type,
+      host: connData.host || undefined,
+      port: connData.port,
+      username: connData.username,
+      status: "connected", // We'll assume it's connected if we have the data
+      lastConnected: connData.updatedAt ? new Date(connData.updatedAt) : null,
+      isSandbox: Boolean(connData.sandboxDb),
+      sandboxDb: connData.sandboxDb ? {
+        id: connData.sandboxDb.id,
+        name: connData.sandboxDb.name
+      } : undefined
     };
   }
 }
