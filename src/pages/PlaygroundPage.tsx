@@ -25,11 +25,24 @@ interface PlaygroundItem {
   databaseName?: string;
 }
 
+interface ChatMessage {
+  type: 'user' | 'assistant';
+  content: string;
+  query?: string;
+  explanation?: string;
+  results?: any[];
+}
+
+interface SqlGenerationResult {
+  sql: string;
+  explanation: string;
+}
+
 const PlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { connections, activeConnection, setActiveConnection, refreshSchema } = useDatabase();
+  const { connections, activeConnection, setActiveConnection, refreshSchema, loadConnections } = useDatabase();
   const {
     playground,
     createPlayground,
@@ -56,6 +69,11 @@ const PlaygroundPage: React.FC = () => {
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [activeTab, setActiveTab] = useState("sql"); // 'sql' or 'explanation'
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
+
+  // New state for chat messages
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [prompt, setPrompt] = useState('');
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const results = [
     {
@@ -243,10 +261,14 @@ const PlaygroundPage: React.FC = () => {
           setIsLoadingSchema(true);
           setActiveConnection(connection);
           
-          // Load the schema for the selected database
+          // Load the schema for the selected database if not already loaded
           try {
-            await refreshSchema();
-            console.log('Schema loaded after database change:', connection.schema);
+            if (!connection.schema || Object.keys(connection.schema).length === 0) {
+              await refreshSchema();
+              console.log('Schema loaded after database change:', connection.schema);
+            } else {
+              console.log('Using existing schema:', connection.schema);
+            }
           } catch (error) {
             console.error('Error loading schema:', error);
           } finally {
@@ -260,10 +282,15 @@ const PlaygroundPage: React.FC = () => {
     }
   };
 
+  // Effect to load connections when component mounts
+  useEffect(() => {
+    loadConnections();
+  }, [loadConnections]);
+
   // Effect to load schema when active connection changes
   useEffect(() => {
     const loadSchema = async () => {
-      if (activeConnection && !activeConnection.schema) {
+      if (activeConnection && (!activeConnection.schema || Object.keys(activeConnection.schema).length === 0)) {
         console.log('Loading schema for connection:', activeConnection);
         setIsLoadingSchema(true);
         try {
@@ -282,19 +309,71 @@ const PlaygroundPage: React.FC = () => {
     loadSchema();
   }, [activeConnection, refreshSchema]);
 
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Handle prompt submission
+  const handlePromptSubmit = async () => {
+    if (!prompt.trim()) return;
+
+    // Add user message
+    setMessages(prev => [...prev, { type: 'user', content: prompt }]);
+    const currentPrompt = prompt;
+    setPrompt('');
+
+    try {
+      // Generate SQL from prompt
+      await generateSqlFromPrompt(currentPrompt);
+      
+      // Add assistant message with query and explanation
+      if (playground?.currentSql && playground?.currentExplanation) {
+        setMessages(prev => [...prev, {
+          type: 'assistant',
+          content: 'Here\'s the SQL query based on your request:',
+          query: playground.currentSql,
+          explanation: playground.currentExplanation
+        }]);
+      }
+    } catch (error) {
+      console.error('Error generating SQL:', error);
+      setMessages(prev => [...prev, {
+        type: 'assistant',
+        content: 'Sorry, I encountered an error while generating the SQL query.'
+      }]);
+    }
+  };
+
   // Handle query execution
-  const handleExecuteQuery = async () => {
-    await executeQuery();
+  const handleExecuteQuery = async (query: string) => {
+    try {
+      setCurrentSql(query);
+      await executeQuery();
+      
+      if (queryResults) {
+        // Add results message
+        setMessages(prev => [...prev, {
+          type: 'assistant',
+          content: 'Query executed successfully:',
+          results: queryResults
+        }]);
+      }
+    } catch (error) {
+      console.error('Error executing query:', error);
+      setMessages(prev => [...prev, {
+        type: 'assistant',
+        content: 'Error executing query: ' + (error as Error).message
+      }]);
+    }
   };
 
-  // Handle SQL generation from prompt
-  const handleGenerateSql = async (prompt: string) => {
-    await generateSqlFromPrompt(prompt);
-  };
-
-  // Handle SQL editor changes
-  const handleSqlChange = (sql: string) => {
-    setCurrentSql(sql);
+  // Handle copy query
+  const handleCopyQuery = (query: string) => {
+    navigator.clipboard.writeText(query);
+    // You might want to show a toast notification here
   };
 
   // Mock SQL and explanation for testing
@@ -362,7 +441,6 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Close dropdown when clicking outside
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -385,6 +463,28 @@ const PlaygroundPage: React.FC = () => {
     if (!playground) return [];
     return playground.connections?.map(conn => conn.connection) || [];
   }, [playground]);
+
+  // Handle playground deletion
+  const handleDeletePlayground = async () => {
+    if (!id) return;
+    
+    try {
+      const success = await playgroundService.deletePlayground(id);
+      if (success) {
+        navigate("/");
+      } else {
+        console.error("Failed to delete playground");
+        // You might want to show an error message to the user here
+      }
+    } catch (error) {
+      console.error("Error deleting playground:", error);
+      // You might want to show an error message to the user here
+    }
+    setIsDeleteModalOpen(false);
+  };
+
+  // Update the condition to check for active connection
+  const noConnection = !activeConnection || !playground?.connections.length;
 
   return (
     <div className={styles.playgroundPage}>
@@ -474,20 +574,6 @@ const PlaygroundPage: React.FC = () => {
                 </Button>
               )}
 
-              {activeConnection && (
-                <select
-                  value={activeConnection.id}
-                  onChange={(e) => handleDatabaseChange(e.target.value)}
-                  className={styles.databaseSelector}
-                >
-                  {connections.map((connection) => (
-                    <option key={connection.id} value={connection.id}>
-                      {connection.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-
               <div className={styles.actionsDropdown} ref={actionsDropdownRef}>
                 <button
                   className={styles.actionsButton}
@@ -535,7 +621,7 @@ const PlaygroundPage: React.FC = () => {
             </div>
           </div>
 
-          {!playground?.connections.length ? (
+          {noConnection ? (
             <div className={styles.noConnectionState}>
               <div className={styles.noConnectionIcon}>🔌</div>
               <h2>No Database Connected</h2>
@@ -545,8 +631,8 @@ const PlaygroundPage: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className={styles.playgroundLayout}>
-              {isDbExplorerVisible && activeConnection && (
+            <div className={styles.mainSection}>
+              {isDbExplorerVisible && (
                 <div className={styles.databaseExplorerContainer}>
                   {isLoadingSchema ? (
                     <div className={styles.loadingState}>
@@ -555,23 +641,21 @@ const PlaygroundPage: React.FC = () => {
                     </div>
                   ) : (
                     <DatabaseExplorer
-                      databases={[
-                        {
-                          id: activeConnection.id,
-                          name: activeConnection.name,
-                          tables: activeConnection.schema?.tables || [],
-                          views: activeConnection.schema?.views || [],
-                        },
-                      ]}
-                      activeDatabase={activeConnection.id}
-                      onDatabaseChange={(id) => {
-                        const connection = connections.find(conn => conn.id === id);
-                        if (connection) {
-                          setActiveConnection(connection);
-                        }
-                      }}
+                      databases={connections.map(connection => {
+                        console.log('Mapping connection:', connection.name, 'Schema:', connection.schema);
+                        return {
+                          id: connection.id,
+                          name: connection.name,
+                          type: connection.type,
+                          status: connection.status,
+                          tables: connection.schema?.tables || [],
+                          views: connection.schema?.views || [],
+                        };
+                      })}
+                      activeDatabase={activeConnection?.id || ''}
+                      onDatabaseChange={handleDatabaseChange}
                       onTableSelect={(tableName) => {
-                        const table = activeConnection.schema?.tables.find(
+                        const table = activeConnection?.schema?.tables.find(
                           (t) => t.name === tableName
                         );
                         if (table) {
@@ -595,103 +679,88 @@ const PlaygroundPage: React.FC = () => {
                 </div>
               )}
 
-              <div className={styles.mainSection}>
-                <div className={styles.promptSection}>
-                  <h2 className={styles.sectionTitle}>
-                    Generate SQL from Natural Language
-                  </h2>
-                  <PromptInput
-                    onGenerateQuery={handleGenerateSql}
-                    isLoading={isGenerating}
-                    placeholderText="Describe what you want to query in natural language..."
-                    recentPrompts={
-                      playground?.history
-                        .slice(0, 3)
-                        .map((item) => item.prompt) || []
-                    }
-                    examplePrompts={examplePrompts}
-                  />
-                </div>
-
-                <div className={styles.splitView}>
-                  <div className={styles.editorSection}>
-                    <div className={styles.sectionHeader}>
-                      <div className={styles.sqlTabs}>
-                        <button
-                          className={`${styles.sqlTab} ${
-                            activeTab === "sql" ? styles.active : ""
-                          }`}
-                          onClick={() => setActiveTab("sql")}
-                        >
-                          Generated SQL
-                        </button>
-                        {(playground?.currentExplanation ||
-                          mockExplanation) && (
-                          <button
-                            className={`${styles.sqlTab} ${
-                              activeTab === "explanation" ? styles.active : ""
-                            }`}
-                            onClick={() => setActiveTab("explanation")}
-                          >
-                            Explanation
-                          </button>
-                        )}
-                      </div>
-                      {/* <Button
-                        variant="primary"
-                        size="small"
-                        onClick={handleExecuteQuery}
-                        disabled={
-                          isExecuting || (!playground?.currentSql && !mockSql)
-                        }
-                      >
-                        {isExecuting ? "Executing..." : "Execute Query"}
-                      </Button> */}
-                    </div>
-                    <div className={styles.sqlEditorWrapper}>
-                      {activeTab === "sql" ? (
-                        <SqlEditor
-                          sql={playground?.currentSql || mockSql}
-                          onChange={handleSqlChange}
-                          onExecute={handleExecuteQuery}
-                          explanation={
-                            playground?.currentExplanation || mockExplanation
-                          }
-                          isLoading={isExecuting}
-                          isDmlQuery={isDmlQuery(
-                            playground?.currentSql || mockSql
-                          )}
-                        />
-                      ) : (
-                        <div className={styles.explanationContainer}>
-                          {playground?.currentExplanation ||
-                            mockExplanation ||
-                            "No explanation available for this query."}
+              <div className={styles.chatContainer} ref={chatContainerRef}>
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`${styles.messageBox} ${
+                      message.type === 'user' ? styles.userMessage : styles.assistantMessage
+                    }`}
+                  >
+                    <div>{message.content}</div>
+                    
+                    {message.query && (
+                      <div className={styles.queryBox}>
+                        <div className={styles.queryHeader}>
+                          <span>Generated SQL</span>
+                          <div className={styles.queryActions}>
+                            <Button
+                              variant="secondary"
+                              size="small"
+                              onClick={() => handleCopyQuery(message.query!)}
+                            >
+                              Copy
+                            </Button>
+                            <Button
+                              variant="primary"
+                              size="small"
+                              onClick={() => handleExecuteQuery(message.query!)}
+                            >
+                              Execute
+                            </Button>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <pre className={styles.queryContent}>{message.query}</pre>
+                      </div>
+                    )}
+                    
+                    {message.explanation && (
+                      <div className={styles.explanationBox}>
+                        {message.explanation}
+                      </div>
+                    )}
+                    
+                    {message.results && (
+                      <div className={styles.resultsBox}>
+                        <div className={styles.resultsPreview}>
+                          {/* Show a preview of the results */}
+                          {message.results.length} rows returned
+                        </div>
+                        <button
+                          className={styles.expandButton}
+                          onClick={() => {/* Handle expand to modal */}}
+                        >
+                          View Full Results
+                        </button>
+                      </div>
+                    )}
                   </div>
-
-                  <div className={styles.resultsSection}>
-                    <ResultsTable
-                      data={queryResults || sampleResults}
-                      isLoading={isExecuting}
-                      error={playground?.currentSql ? error : null}
-                      onExportData={handleExportData}
-                    />
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {isHistoryVisible && (
-                <div className={styles.historyContainer}>
-                  <QueryHistory
-                    history={playground?.history || []}
-                    onSelectQuery={(item: QueryHistoryItem) => selectHistoryItem(Number(item.id))}
-                    onClearHistory={clearHistory}
+              <div className={styles.inputContainer}>
+                <div className={styles.inputWrapper}>
+                  <textarea
+                    className={styles.promptInput}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Describe what you want to query in natural language..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handlePromptSubmit();
+                      }
+                    }}
                   />
+                  <button
+                    className={styles.sendButton}
+                    onClick={handlePromptSubmit}
+                    disabled={!prompt.trim() || isGenerating}
+                  >
+                    {isGenerating ? 'Generating...' : 'Send'}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -708,11 +777,7 @@ const PlaygroundPage: React.FC = () => {
             cancelText="Cancel"
             confirmText="Delete"
             onCancel={() => setIsDeleteModalOpen(false)}
-            onConfirm={() => {
-              // Delete the playground and navigate back
-              navigate("/");
-              setIsDeleteModalOpen(false);
-            }}
+            onConfirm={handleDeletePlayground}
             confirmVariant="danger"
           />
         }

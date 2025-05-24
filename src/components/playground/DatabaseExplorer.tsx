@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./DatabaseExplorer.module.css";
+import { DatabaseSelector } from "../database/DatabaseSelector";
 
 interface Column {
   name: string;
@@ -21,6 +22,8 @@ interface View {
 interface Database {
   id: string;
   name: string;
+  type?: string;
+  status?: 'connected' | 'disconnected' | 'error';
   tables: Table[];
   views: View[];
 }
@@ -41,12 +44,8 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   onColumnSelect,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>(
-    {}
-  );
-  const [expandedViews, setExpandedViews] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>({});
+  const [expandedViews, setExpandedViews] = useState<Record<string, boolean>>({});
 
   // Set the first database as active if none is selected
   useEffect(() => {
@@ -56,6 +55,15 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   }, [databases, activeDatabase, onDatabaseChange]);
 
   const currentDb = databases.find((db) => db.id === activeDatabase);
+  
+  // Debug logging for schema data
+  useEffect(() => {
+    if (currentDb) {
+      console.log('Current database:', currentDb.name);
+      console.log('Tables:', currentDb.tables);
+      console.log('Views:', currentDb.views);
+    }
+  }, [currentDb]);
 
   const handleTableClick = (tableName: string) => {
     setExpandedTables((prev) => ({
@@ -77,15 +85,13 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   };
 
   // Filter tables and views based on search term
-  const filteredTables =
-    currentDb?.tables.filter((table) =>
-      table.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const filteredTables = currentDb?.tables?.filter((table) =>
+    table.name.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
-  const filteredViews =
-    currentDb?.views.filter((view) =>
-      view.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const filteredViews = currentDb?.views?.filter((view) =>
+    view.name.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   const getColumnIcon = (column: Column) => {
     if (column.isPrimaryKey) return "🔑";
@@ -104,21 +110,36 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
     );
   }
 
+  // Check if schema is loaded
+  const hasSchema = currentDb.tables?.length > 0 || currentDb.views?.length > 0;
+  if (!hasSchema) {
+    return (
+      <div className={styles.databaseExplorer}>
+        <div className={styles.header}>
+          <h3>Database Explorer</h3>
+          <DatabaseSelector
+            databases={databases}
+            selectedDatabase={activeDatabase}
+            onDatabaseChange={onDatabaseChange}
+          />
+        </div>
+        <div className={styles.noDatabase}>
+          <p>No schema available</p>
+          <p>The database schema might still be loading or not accessible</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.databaseExplorer}>
       <div className={styles.header}>
         <h3>Database Explorer</h3>
-        <select
-          value={activeDatabase || ""}
-          onChange={(e) => onDatabaseChange(e.target.value)}
-          className={styles.databaseSelect}
-        >
-          {databases.map((db) => (
-            <option key={db.id} value={db.id}>
-              {db.name}
-            </option>
-          ))}
-        </select>
+        <DatabaseSelector
+          databases={databases}
+          selectedDatabase={activeDatabase}
+          onDatabaseChange={onDatabaseChange}
+        />
       </div>
 
       <div className={styles.searchContainer}>
@@ -159,25 +180,19 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                     <span className={styles.itemName}>{table.name}</span>
                   </div>
 
-                  {expandedTables[table.name] && (
+                  {expandedTables[table.name] && table.columns && (
                     <div className={styles.columnList}>
                       {table.columns.map((column) => (
                         <div
                           key={column.name}
                           className={styles.column}
-                          onClick={() =>
-                            handleColumnClick(table.name, column.name)
-                          }
+                          onClick={() => handleColumnClick(table.name, column.name)}
                         >
                           <span className={styles.columnIcon}>
                             {getColumnIcon(column)}
                           </span>
-                          <span className={styles.columnName}>
-                            {column.name}
-                          </span>
-                          <span className={styles.columnType}>
-                            {column.type}
-                          </span>
+                          <span className={styles.columnName}>{column.name}</span>
+                          <span className={styles.columnType}>{column.type}</span>
                         </div>
                       ))}
                     </div>
@@ -221,19 +236,13 @@ const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                         <div
                           key={column.name}
                           className={styles.column}
-                          onClick={() =>
-                            handleColumnClick(view.name, column.name)
-                          }
+                          onClick={() => handleColumnClick(view.name, column.name)}
                         >
                           <span className={styles.columnIcon}>
                             {getColumnIcon(column)}
                           </span>
-                          <span className={styles.columnName}>
-                            {column.name}
-                          </span>
-                          <span className={styles.columnType}>
-                            {column.type}
-                          </span>
+                          <span className={styles.columnName}>{column.name}</span>
+                          <span className={styles.columnType}>{column.type}</span>
                         </div>
                       ))}
                     </div>

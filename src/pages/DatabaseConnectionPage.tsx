@@ -31,6 +31,8 @@ const DatabaseConnectionPage: React.FC = () => {
     activeConnection,
     refreshSchema,
     loadConnections,
+    clearError,
+    setError,
   } = useDatabase();
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -83,13 +85,25 @@ const DatabaseConnectionPage: React.FC = () => {
         file: connectionData.file,
         createSandbox: connectionData.createSandbox
       };
-      
+
+      // Clear any existing error before attempting connection
+      if (error) clearError();
+
+      // Attempt to connect
       await connectToDatabase(params);
-      
+
       // After successful connection, refresh connections list
       await loadConnections();
     } catch (err) {
-      console.error("Connection error:", err);
+      // Log the error for debugging
+      console.error('Connection error:', err);
+      
+      // If the error wasn't set by the context (which would happen in most cases),
+      // we set it here as a fallback
+      if (!error) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to connect to database';
+        setError(errorMessage);
+      }
     }
   };
 
@@ -257,6 +271,13 @@ const DatabaseConnectionPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Show error if present */}
+          {error && (
+            <div className={styles.errorBox}>
+              <strong>Connection Error:</strong> {error}
+            </div>
+          )}
+
           {isLoadingConnections && (!safeConnections || safeConnections.length === 0) ? (
             <div className={styles.loadingContainer}>
               <LoadingSpinner
@@ -277,8 +298,6 @@ const DatabaseConnectionPage: React.FC = () => {
 
               <section className={styles.databaseListSection}>
                 <h2>Your Connections</h2>
-                {error && <div className={styles.errorMessage}>{error}</div>}
-
                 {!safeConnections || safeConnections.length === 0 ? (
                   <div className={styles.emptyState}>
                     <p>You don't have any database connections yet.</p>

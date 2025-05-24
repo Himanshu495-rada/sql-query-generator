@@ -213,8 +213,7 @@ class PlaygroundService {
       console.log(`Deleting playground with ID ${id}`);
       // Use the correct method name 'del' instead of 'delete'
       const response = await api.del(`playgrounds/${id}`);
-      
-      return response?.data?.success === true;
+      return response?.success === true;
     } catch (error) {
       console.error(`Error deleting playground with ID ${id}:`, error);
       return false; // Return false on error

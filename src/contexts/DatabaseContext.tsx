@@ -36,6 +36,7 @@ interface DatabaseContextType {
   loadSampleDatabase: (sampleId: string) => Promise<void>;
   setActiveConnection: (connection: DatabaseConnection | null) => void;
   clearError: () => void;
+  setError: (error: string | null) => void;
   deleteConnection: (connectionId: string) => Promise<void>;
   testConnection: (params: ConnectionParams) => Promise<boolean>;
 }
@@ -65,6 +66,7 @@ const initialDatabaseContext: DatabaseContextType = {
   },
   setActiveConnection: () => {},
   clearError: () => {},
+  setError: () => {},
   deleteConnection: async () => {
     throw new Error("Not implemented");
   },
@@ -99,16 +101,35 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
 
     try {
       const connectionsList = await databaseService.getConnections();
-      // Even if empty, at least we have a valid array now
       setConnections(connectionsList || []);
+
+      // Restore active connection from localStorage if it exists
+      const savedActiveConnectionId = localStorage.getItem('activeConnectionId');
+      if (savedActiveConnectionId && connectionsList.length > 0) {
+        const savedConnection = connectionsList.find(conn => conn.id === savedActiveConnectionId);
+        if (savedConnection) {
+          setActiveConnection(savedConnection);
+        } else {
+          // If saved connection not found, clear localStorage
+          localStorage.removeItem('activeConnectionId');
+        }
+      }
     } catch (err) {
       console.error("Failed to load connections:", err);
-      // Set the error message but don't break the UI
       setError(err instanceof Error ? err.message : "Failed to load connections");
-      // Ensure connections is always at least an empty array
       setConnections([]);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  // Update local storage when active connection changes
+  const handleSetActiveConnection = useCallback((connection: DatabaseConnection | null) => {
+    setActiveConnection(connection);
+    if (connection) {
+      localStorage.setItem('activeConnectionId', connection.id);
+    } else {
+      localStorage.removeItem('activeConnectionId');
     }
   }, []);
 
@@ -122,7 +143,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     try {
       const connection = await databaseService.connectToDatabase(params);
       setConnections((prev) => [...prev, connection]);
-      setActiveConnection(connection);
+      handleSetActiveConnection(connection);
       return connection;
     } catch (err) {
       console.error("Failed to connect to database:", err);
@@ -133,7 +154,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleSetActiveConnection]);
 
   // Disconnect from a database
   const disconnectDatabase = useCallback(async (connectionId: string): Promise<void> => {
@@ -145,8 +166,11 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
       
       // Update active connection if we just disconnected it
       if (activeConnection?.id === connectionId) {
-        setActiveConnection(null);
+        handleSetActiveConnection(null);
       }
+      
+      // Remove from connections list
+      setConnections(prev => prev.filter(conn => conn.id !== connectionId));
     } catch (err) {
       console.error("Failed to disconnect database:", err);
       setError(
@@ -156,7 +180,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeConnection, handleSetActiveConnection]);
 
   // Execute a query on the active connection
   const executeQuery = useCallback(async (query: string): Promise<QueryResult> => {
@@ -194,12 +218,19 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
       const updatedSchema = await databaseService.refreshSchema(
         activeConnection.id
       );
-      
       // Update the active connection with the new schema
       setActiveConnection({
         ...activeConnection,
         schema: updatedSchema,
       });
+      // Also update the schema in the connections array
+      setConnections((prevConnections) =>
+        prevConnections.map((conn) =>
+          conn.id === activeConnection.id
+            ? { ...conn, schema: updatedSchema }
+            : conn
+        )
+      );
     } catch (err) {
       console.error("Schema refresh failed:", err);
       setError(
@@ -293,6 +324,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({
     loadSampleDatabase,
     setActiveConnection,
     clearError,
+    setError,
     deleteConnection,
     testConnection,
   };
