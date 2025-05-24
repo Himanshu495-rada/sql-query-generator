@@ -622,7 +622,6 @@ const DashboardPage: React.FC = () => {
             <div className={styles.welcomeSection}>
               <h1>Welcome back, {user ? user.name.split(" ")[0] : "User"}</h1>
               <p>Here's what's happening with your SQL projects</p>
-              {error && <div className={styles.errorMessage}>{error}</div>}
             </div>
 
             <div className={styles.statsSection}>

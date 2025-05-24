@@ -196,14 +196,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
             placeholder="Search schema..."
             className={styles.searchInput}
           />
-          <label className={styles.systemObjectsToggle}>
-            <input
-              type="checkbox"
-              checked={showSystemObjects}
-              onChange={() => setShowSystemObjects(!showSystemObjects)}
-            />
-            Show system objects
-          </label>
+          
         </div>
       </div>
 

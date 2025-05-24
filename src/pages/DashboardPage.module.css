@@ -36,7 +36,7 @@
 
 .statsSection {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -413,6 +413,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  padding: 16px;
+  border-radius: 8px;
 }
 
 .formGroup {
@@ -422,25 +426,33 @@
 }
 
 .formGroup label {
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text);
-  font-size: 14px;
 }
 
-.formGroup input,
-.formGroup select {
+.formGroup input[type="text"] {
   padding: 10px 12px;
-  border: 1px solid var(--color-border);
   border-radius: 6px;
-  font-size: 15px;
-  transition: all 0.2s;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-input, var(--color-surface-secondary));
+  color: var(--color-text);
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.formGroup input:focus,
-.formGroup select:focus {
-  border-color: var(--color-primary);
+.formGroup input[type="text"]:hover {
+  border-color: var(--color-border-hover, var(--color-primary-light));
+}
+
+.formGroup input[type="text"]:focus {
   outline: none;
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-ring, rgba(0, 123, 255, 0.25));
+}
+
+.formGroup input[type="text"]::placeholder {
+  color: var(--color-text-placeholder, var(--color-text-secondary));
 }
 
 .formNote {
@@ -451,24 +463,30 @@
 
 /* SQL Templates Section */
 .sqlTemplatesSection {
-  margin-bottom: 32px; /* Consistent spacing with other sections */
+  margin-bottom: 32px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .sqlTemplatesTitle {
   font-size: 24px;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 20px; /* Space between title and cards */
+  margin-bottom: 24px;
 }
 
 .sqlTemplatesCardContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sqlTemplateCard {
-  background-color: var(--color-surface); /* Uses standard card background from theme */
+  background-color: var(--color-surface);
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
@@ -476,13 +494,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  cursor: pointer; /* Space between title and description within the card */
+  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .sqlTemplateCard:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
-  
 }
 
 .sqlTemplateCard h3 {
@@ -490,6 +510,9 @@
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sqlTemplateCard p {
@@ -497,6 +520,8 @@
   color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Responsive adjustments for SQL Templates card container */
@@ -508,10 +533,10 @@
 
 @media (max-width: 600px) { 
   .sqlTemplatesCardContainer {
-    grid-template-columns: 1fr; /* Stack cards on small screens */
+    grid-template-columns: 1fr;
   }
   .sqlTemplatesTitle {
-    font-size: 20px; /* Slightly smaller title on mobile */
+    font-size: 20px;
   }
 }
 
@@ -598,29 +623,72 @@
 .databaseSelectionList {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   padding: 8px;
   margin-top: 4px;
+  background-color: var(--color-surface);
 }
 
 .databaseSelectionItem {
   display: flex;
   align-items: center;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .databaseSelectionItem:hover {
-  background-color: var(--hover-bg-color);
+  background-color: var(--color-surface-secondary);
 }
 
 .databaseSelectionItem input[type="checkbox"] {
-  margin-right: 8px;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-right: 12px;
+  cursor: pointer;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-surface);
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.databaseSelectionItem input[type="checkbox"]:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.databaseSelectionItem input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.databaseSelectionItem input[type="checkbox"]:hover {
+  border-color: var(--color-primary);
+}
+
+.databaseSelectionItem input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
 }
 
 .databaseSelectionItem label {
   cursor: pointer;
   flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  user-select: none;
 }

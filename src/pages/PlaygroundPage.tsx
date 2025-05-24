@@ -575,10 +575,6 @@ const PlaygroundPage: React.FC = () => {
               <div className={styles.databaseInfo}>
                 {activeConnection ? (
                   <>
-                    <span
-                      className={`${styles.databaseStatus} ${styles[activeConnection.status]
-                      }`}
-                    ></span>
                     {activeConnection.name}
                   </>
                 ) : (
@@ -729,7 +725,7 @@ const PlaygroundPage: React.FC = () => {
                               onClick={() => handleExecuteQuery(message.sql!)}
                               disabled={isExecuting || noConnection} 
                             >
-                              <FiPlay className={styles.icon} /> Execute
+                              <FiPlay className={styles.icon} /> Run
                             </Button>
                           </div>
                         </div>

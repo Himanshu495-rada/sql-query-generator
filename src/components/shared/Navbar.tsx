@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import Button from "./Button";
-import { GoSidebarCollapse } from "react-icons/go";
+import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
 import { FiUser, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import ThemeToggle from "./ThemeToggle";
 import authService from "../../services/authService";
@@ -112,14 +112,17 @@ const Navbar: React.FC<NavbarProps> = ({
     >
       <div className={styles.navbar}>
         <div className={styles.navbarLeft}>
-          {/* I want to display sidebarcollapse button if sidebar is not visible */}
-          {onToggleSidebar && !isSidebarVisible && (
+          {onToggleSidebar && (
             <button
               className={styles.sidebarToggle}
               onClick={onToggleSidebar}
-              aria-label="Show sidebar"
+              aria-label={isSidebarVisible ? "Hide sidebar" : "Show sidebar"}
             >
-              <GoSidebarCollapse size={24} />
+              {isSidebarVisible ? (
+                <GoSidebarCollapse size={24} />
+              ) : (
+                <GoSidebarExpand size={24} />
+              )}
             </button>
           )}
 

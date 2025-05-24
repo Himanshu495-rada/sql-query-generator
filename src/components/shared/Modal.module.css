@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,10 +15,9 @@
 }
 
 .modalContainer {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 32px);
@@ -76,14 +75,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modalTitle {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .closeButton {
@@ -92,7 +91,7 @@
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
-  color: #718096;
+  color: var(--color-text-secondary);
   padding: 0;
   width: 24px;
   height: 24px;
@@ -104,8 +103,8 @@
 }
 
 .closeButton:hover {
-  background-color: #f1f5f9;
-  color: #4a5568;
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text);
 }
 
 .floatingClose {
@@ -113,22 +112,24 @@
   top: 12px;
   right: 12px;
   z-index: 10;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .modalBody {
   padding: 24px;
   overflow-y: auto;
   flex: 1;
+  color: var(--color-text);
 }
 
 .modalFooter {
   padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  background-color: var(--color-surface);
 }
 
 @media (max-width: 640px) {

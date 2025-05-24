@@ -1,7 +1,7 @@
 .schemaViewer {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -10,13 +10,13 @@
 
 .schemaHeader {
   padding: 16px 20px;
-  border-bottom: 1px solid #ecf0f1;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background-color: #f8f9fa;
+  background-color: var(--color-surface);
 }
 
 .schemaInfo {
@@ -27,15 +27,15 @@
 
 .schemaInfo h3 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-weight: 600;
 }
 
 .databaseType {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   padding: 2px 6px;
-  background-color: #f1f1f1;
+  background-color: var(--color-surface-secondary);
   border-radius: 4px;
 }
 
@@ -48,16 +48,18 @@
 
 .searchInput {
   padding: 8px 12px;
-  border: 1px solid #bdc3c7;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 14px;
   width: 200px;
+  background-color: var(--color-surface-input, var(--color-surface-secondary));
+  color: var(--color-text);
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
 }
 
 .systemObjectsToggle {
@@ -65,7 +67,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -75,8 +77,8 @@
 
 .schemaTabs {
   display: flex;
-  border-bottom: 1px solid #ecf0f1;
-  background-color: #f9f9f9;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
 }
 
 .schemaTab {
@@ -86,18 +88,18 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  color: #555;
+  color: var(--color-text-secondary);
   transition: all 0.2s ease;
 }
 
 .activeTab {
-  color: #3498db;
-  background-color: #ffffff;
-  box-shadow: inset 0 -2px 0 #3498db;
+  color: var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: inset 0 -2px 0 var(--color-primary);
 }
 
 .schemaTab:hover:not(.activeTab) {
-  background-color: #edf1f7;
+  background-color: var(--color-surface-secondary);
 }
 
 .schemaContent {
@@ -107,7 +109,7 @@
 }
 
 .schemaItem {
-  border-bottom: 1px solid #ecf0f1;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .schemaItemHeader {
@@ -119,7 +121,7 @@
 }
 
 .schemaItemHeader:hover {
-  background-color: #f5f8fa;
+  background-color: var(--color-surface-secondary);
 }
 
 .itemIcon {
@@ -130,37 +132,37 @@
 .itemName {
   flex-grow: 1;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .itemCount {
   margin-right: 12px;
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   padding: 2px 6px;
-  background-color: #f1f1f1;
+  background-color: var(--color-surface-secondary);
   border-radius: 4px;
 }
 
 .expandIcon {
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 
 .schemaItemDetails {
   padding: 8px 16px 16px 48px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #ecf0f1;
+  background-color: var(--color-surface-secondary);
+  border-top: 1px solid var(--color-border);
 }
 
 .columnHeader,
 .paramHeader {
   display: flex;
   padding: 6px 0;
-  border-bottom: 1px solid #ecf0f1;
+  border-bottom: 1px solid var(--color-border);
   font-weight: 600;
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
@@ -168,7 +170,7 @@
 .paramItem {
   display: flex;
   padding: 8px 0;
-  border-bottom: 1px dashed #ecf0f1;
+  border-bottom: 1px dashed var(--color-border);
   font-size: 14px;
 }
 
@@ -188,67 +190,67 @@
   width: 200px;
   margin-right: 10px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .columnType,
 .paramType {
   width: 120px;
-  color: #3498db;
+  color: var(--color-primary);
 }
 
 .columnNullable {
   font-size: 12px;
-  color: #95a5a6;
+  color: var(--color-text-secondary);
   padding: 2px 6px;
-  background-color: #f1f1f1;
+  background-color: var(--color-surface);
   border-radius: 4px;
   margin-right: 8px;
 }
 
 .foreignKeyInfo {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .emptyState {
   padding: 24px;
   text-align: center;
-  color: #95a5a6;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .primaryKeyColumn {
-  background-color: rgba(52, 152, 219, 0.05);
+  background-color: var(--color-primary-light);
 }
 
 .foreignKeyColumn {
-  background-color: rgba(46, 204, 113, 0.05);
+  background-color: var(--color-success-light);
 }
 
 .foreignKeyReference {
-  color: #2980b9;
+  color: var(--color-primary);
   cursor: pointer;
   text-decoration: underline;
   margin-left: 4px;
 }
 
 .foreignKeyReference:hover {
-  color: #3498db;
+  color: var(--color-primary-hover);
 }
 
 .columnDefault {
   font-size: 12px;
-  color: #8e44ad;
+  color: var(--color-text-secondary);
   padding: 2px 6px;
-  background-color: rgba(142, 68, 173, 0.1);
+  background-color: var(--color-surface);
   border-radius: 4px;
   margin-right: 8px;
 }
 
 .expandedHeader {
-  background-color: #edf1f7;
+  background-color: var(--color-surface-secondary);
 }
 
 @media (max-width: 768px) {
@@ -296,14 +298,14 @@
     width: 100%;
     font-weight: 600;
     margin-bottom: 6px;
-    color: #2c3e50;
+    color: var(--color-text);
   }
 
   .columnType,
   .paramType {
     width: auto;
     padding: 2px 6px;
-    background-color: #e6f7ff;
+    background-color: var(--color-surface);
     border-radius: 4px;
     font-size: 13px;
   }

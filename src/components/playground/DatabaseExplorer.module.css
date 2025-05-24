@@ -40,7 +40,7 @@
 }
 
 .searchContainer {
-  padding: 0 16px 12px;
+  padding: 8px;
   background-color: var(--color-surface);
   position: sticky;
   top: 0;
