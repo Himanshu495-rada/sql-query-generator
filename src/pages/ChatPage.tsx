@@ -79,16 +79,19 @@ const ChatPage: React.FC = () => {
       const response: GenerateQueryApiResponse = await queryService.generateQuery(payload);
       console.log('API Response in ChatPage:', response);
 
-      if (response.query) {
-        const aiResponse: ApiQueryResponseData = response.query;
+      if (response.data?.query) {
+        const aiResponse: ApiQueryResponseData = response.data.query;
         
         let finalSql = '';
-        let finalExplanation = aiResponse.explanation || 'No explanation provided.'; // Default explanation
+        let finalExplanation = ""; // Default explanation
 
         if (aiResponse.sqlQuery && typeof aiResponse.sqlQuery === 'string') {
-          const jsonStringInSql = aiResponse.sqlQuery
-            .replace(/^```json\s*/, '') 
-            .replace(/\s*```$/, '');    
+          let jsonStringInSql = aiResponse.sqlQuery.trim();
+          if (jsonStringInSql.startsWith('```json')) {
+            jsonStringInSql = jsonStringInSql.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          } else if (jsonStringInSql.startsWith('json')) {
+            jsonStringInSql = jsonStringInSql.replace(/^json\s*/, '');
+          }
           try {
             const processedForJsonParse = jsonStringInSql.replace(/"\s*\+\s*"/g, "");
             const parsedSqlData: ParsedSqlData = JSON.parse(processedForJsonParse);
@@ -120,7 +123,8 @@ const ChatPage: React.FC = () => {
           ...prevMessages,
           {
             id: String(prevMessages.length + 1),
-            text: `SQL: ${displayQuery}\n\nExplanation: ${displayExplanation}`,
+            text: `Explanation: ${displayExplanation}`,
+            sql: displayQuery,
             sender: 'ai',
             queryData: aiResponse, 
             timestamp: new Date(),

@@ -282,7 +282,7 @@
   color: var(--color-text-code-block, #d4d4d4);
   padding: 12px;
   padding-top: 45px;
-  border-radius: 6px;
+  border-radius: 15px;
   margin-top: 10px;
   overflow-x: auto;
   font-family: var(--font-family-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace);
@@ -329,11 +329,248 @@
 }
 
 .resultsBox {
-  background-color: var(--color-surface-secondary);
-  padding: 10px 12px;
+  background: var(--color-surface);
+  padding: clamp(12px, 3vw, 20px);
+  border-radius: clamp(8px, 2vw, 12px);
+  margin-top: 16px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  width: 100%;
+  max-width: 100%;
+}
+
+.resultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(12px, 2vw, 16px);
+  padding-bottom: clamp(8px, 1.5vw, 12px);
+  border-bottom: 2px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.resultsHeader span {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.resultsActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.resultsActions button {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: 6px;
-  margin-top: 10px;
-  font-size: 0.9rem;
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2vw, 16px);
+  font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.resultsActions button:hover {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.resultsTableWrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  margin: 0 -8px;
+  padding: 0 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-surface-secondary);
+  -webkit-overflow-scrolling: touch;
+}
+
+.resultsTableWrapper::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.resultsTableWrapper::-webkit-scrollbar-track {
+  background: var(--color-surface-secondary);
+  border-radius: 4px;
+}
+
+.resultsTableWrapper::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+.resultsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+  line-height: 1.4;
+  min-width: 600px; /* Ensure table doesn't get too squeezed */
+}
+
+.resultsTable th {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  padding: clamp(8px, 1.5vw, 12px) clamp(12px, 2vw, 16px);
+  text-align: left;
+  border-bottom: 2px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.resultsTable td {
+  padding: clamp(6px, 1.5vw, 10px) clamp(12px, 2vw, 16px);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+  max-width: clamp(150px, 30vw, 300px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1024px) {
+  .resultsBox {
+    margin: 12px 0;
+  }
+
+  .resultsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .resultsActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .resultsBox {
+    padding: 12px;
+    margin: 8px 0;
+  }
+
+  .resultsActions {
+    gap: 6px;
+  }
+
+  .resultsActions button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .resultsTable th:first-child,
+  .resultsTable td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 480px) {
+  .resultsBox {
+    padding: 8px;
+    border-radius: 6px;
+  }
+
+  .resultsHeader {
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .resultsHeader span {
+    font-size: 0.9rem;
+  }
+
+  .resultsActions button {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    min-height: 28px;
+  }
+
+  .resultsTable {
+    font-size: 0.85rem;
+  }
+
+  .resultsTable th,
+  .resultsTable td {
+    padding: 6px 8px;
+  }
+
+  /* Make first column sticky on very small screens */
+  .resultsTable th:first-child,
+  .resultsTable td:first-child {
+    max-width: 120px;
+  }
+}
+
+/* Handle landscape orientation on mobile */
+@media (max-height: 480px) and (orientation: landscape) {
+  .resultsBox {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .resultsHeader {
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+    z-index: 20;
+    padding-top: 8px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .resultsBox {
+    box-shadow: none;
+    border: none;
+  }
+
+  .resultsActions {
+    display: none;
+  }
+
+  .resultsTable {
+    border: 1px solid #000;
+  }
+
+  .resultsTable th,
+  .resultsTable td {
+    border-color: #000;
+  }
+}
+
+/* Column specific styles */
+.resultsTable th:first-child,
+.resultsTable td:first-child {
+  padding-left: 20px;
+}
+
+.resultsTable th:last-child,
+.resultsTable td:last-child {
+  padding-right: 20px;
 }
 
 .resultsPreview {
@@ -747,5 +984,42 @@
   .splitView {
     padding: 8px;
     gap: 8px;
+  }
+}
+
+@media (max-width: 700px) {
+  .resultsBox {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .resultsHeader {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .resultsHeader span {
+    font-size: 1rem;
+  }
+
+  .resultsActions button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .resultsTable th,
+  .resultsTable td {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .resultsTable th:first-child,
+  .resultsTable td:first-child {
+    padding-left: 12px;
+  }
+
+  .resultsTable th:last-child,
+  .resultsTable td:last-child {
+    padding-right: 12px;
   }
 }

@@ -12,7 +12,8 @@ import usePlayground from "../hooks/usePlayground";
 import { formatSql } from "../utils/sqlFormatter";
 import playgroundService from "../services/playgroundService";
 import queryService, { GenerateQueryPayload, ParsedSqlData } from '../services/queryService';
-import { FiCopy, FiPlay } from 'react-icons/fi';
+import { FiCopy, FiPlay, FiMaximize2 } from 'react-icons/fi';
+import { chatMessageService, ChatMessage as ApiChatMessage } from '../services/chatMessageService';
 
 // Define interfaces for the playground data structure
 interface PlaygroundItem {
@@ -22,17 +23,19 @@ interface PlaygroundItem {
   databaseName?: string;
 }
 
-interface ChatMessage {
-  type: 'user' | 'assistant';
-  content: string;
-  query?: string;
-  explanation?: string;
-  results?: any[];
-}
-
 interface SqlGenerationResult {
   sql: string;
   explanation: string;
+}
+
+// Utility to extract plain SQL (remove comments, normalize whitespace)
+function extractSQL(text: string): string {
+  return text
+    .split('\n')
+    .filter(line => !line.trim().startsWith('--'))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 const PlaygroundPage: React.FC = () => {
@@ -67,7 +70,7 @@ const PlaygroundPage: React.FC = () => {
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
   // New state for chat messages
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ApiChatMessage[]>([]);
   const [prompt, setPrompt] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +162,7 @@ const PlaygroundPage: React.FC = () => {
 
   // Add sample data for testing
   const [sampleResults] = useState([]);
-
+  
   // State for recent playgrounds to show in sidebar
   const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>([]);
 
@@ -191,13 +194,17 @@ const PlaygroundPage: React.FC = () => {
     },
   ];
 
+  // New state for expanded result
+  const [expandedResult, setExpandedResult] = useState<any[] | null>(null);
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+
   // Effect to create a new playground if no ID is provided
   useEffect(() => {
     if (!id && !playground) {
       handleCreateNewPlayground();
     }
   }, [id, playground]);
-
+  
   // Effect to fetch playgrounds for the sidebar
   useEffect(() => {
     const fetchPlaygrounds = async () => {
@@ -220,7 +227,7 @@ const PlaygroundPage: React.FC = () => {
         console.error('Error fetching playgrounds:', error);
       }
     };
-
+    
     fetchPlaygrounds();
   }, [connections]);
 
@@ -253,12 +260,12 @@ const PlaygroundPage: React.FC = () => {
   const handleDatabaseChange = async (databaseId: string) => {
     if (playground && id) {
       try {
-        // Find the database connection object by ID
-        const connection = connections.find(conn => conn.id === databaseId);
+      // Find the database connection object by ID
+      const connection = connections.find(conn => conn.id === databaseId);
         console.log('Changing to database:', connection);
-        if (connection) {
+      if (connection) {
           setIsLoadingSchema(true);
-          setActiveConnection(connection);
+        setActiveConnection(connection);
 
           // Load the schema for the selected database if not already loaded
           try {
@@ -315,24 +322,50 @@ const PlaygroundPage: React.FC = () => {
     }
   }, [messages]);
 
-  // Handle prompt submission
+  // Fetch all chat messages for the playground on load
+  useEffect(() => {
+    if (id) {
+      chatMessageService.getAllForPlayground(id)
+        .then(setMessages)
+        .catch((err) => {
+          console.error('Failed to fetch chat messages:', err);
+          setMessages([]);
+        });
+    }
+  }, [id]);
+
+  // Update handlePromptSubmit to use chatMessageService for optimistic user message
   const handlePromptSubmit = async () => {
     if (!prompt.trim() || isApiGenerating || isGenerating) return;
 
-    const userMessage: ChatMessage = { type: 'user', content: prompt };
-    setMessages(prev => [...prev, userMessage]);
-    const currentPrompt = prompt;
-    setPrompt('');
-    setIsApiGenerating(true);
-
-    if (!id || !activeConnection?.id) {
+    if (!id || !activeConnection?.id || !user?.id) {
       setMessages(prev => [...prev, {
-        type: 'assistant',
-        content: 'Error: Playground ID or Active Connection ID is missing to generate SQL.'
+        id: `err-${Date.now()}`,
+        playgroundId: id || '',
+        userId: user?.id || '',
+        sender: 'ai',
+        message: 'Error: Playground ID, Active Connection ID, or User ID is missing to generate SQL.',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }]);
       setIsApiGenerating(false);
       return;
     }
+
+    // Optimistically add user message
+    const userMessage: ApiChatMessage = {
+      id: `user-${Date.now()}`,
+      playgroundId: id,
+      userId: user.id,
+      sender: 'user',
+      message: prompt,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    const currentPrompt = prompt;
+    setPrompt('');
+    setIsApiGenerating(true);
 
     const payload: GenerateQueryPayload = {
       prompt: currentPrompt,
@@ -342,101 +375,106 @@ const PlaygroundPage: React.FC = () => {
 
     try {
       const response = await queryService.generateQuery(payload);
-      console.log('IMP Response Data:', response);
-
-      // Updated to use response.data.query
       if (!response.success || !response.data || !response.data.query) {
         throw new Error(response.message || 'API returned unsuccessful response or missing data.');
       }
-      const apiQueryData = response.data.query;
-
-      let finalSql = '';
-      let finalExplanation = '';
-
-      if (apiQueryData.sqlQuery && typeof apiQueryData.sqlQuery === 'string') {
-        const jsonStringInSql = apiQueryData.sqlQuery
-          .replace(/^```json\s*/, '') 
-          .replace(/\s*```$/, '');    
-        try {
-          // Pre-process the string to handle concatenations like "..." + "..."
-          // This regex replaces '"' (end of string part) + '"' (start of next string part) with an empty string,
-          // effectively merging the content of the string parts.
-          const processedForJsonParse = jsonStringInSql.replace(/"\s*\+\s*"/g, "");
-          const parsedSqlData: ParsedSqlData = JSON.parse(processedForJsonParse);
-          finalSql = parsedSqlData.query || '';
-          finalExplanation = parsedSqlData.explanation || apiQueryData.explanation || 'No detailed explanation provided.';
-        } catch (parseError) {
-          console.warn('Failed to parse inner JSON from sqlQuery, attempting fallback:', parseError);
-          // Fallback: Try to extract SQL if it's not JSON but a direct SQL string with markdown backticks
-          const sqlMatch = apiQueryData.sqlQuery.match(/```(?:sql)?\s*([\s\S]*?)\s*```/);
-          if (sqlMatch && sqlMatch[1]) {
-            finalSql = sqlMatch[1].trim();
-          } else if (!apiQueryData.sqlQuery.includes('json') && !apiQueryData.sqlQuery.includes('{')) { 
-            finalSql = apiQueryData.sqlQuery.trim(); 
-          }
-          finalExplanation = apiQueryData.explanation || 'Could not parse SQL details, showing raw output if available.';
-          if (!finalSql && !jsonStringInSql.includes('{')) finalSql = jsonStringInSql; 
-        }
-      } else {
-        finalExplanation = apiQueryData.explanation || 'No SQL query was generated by the API.';
-      }
-
-      // Update the usePlayground hook's state for current SQL
-      setCurrentSql(finalSql);
-      // The hook might not have a dedicated setCurrentExplanation, 
-      // so finalExplanation is used directly in the message below.
-
-      if (finalSql) {
-        setMessages(prev => [...prev, {
-          type: 'assistant',
-          content: 'Here\'s the generated SQL and explanation:', 
-          query: finalSql,
-          explanation: finalExplanation
-        }]);
-      } else {
-         setMessages(prev => [...prev, {
-          type: 'assistant',
-          content: finalExplanation || 'No SQL query was generated or extracted.'
-        }]);
-      }
-
+      // After backend processes, refetch all chat messages for the playground
+      const updatedMessages = await chatMessageService.getAllForPlayground(id);
+      setMessages(updatedMessages);
     } catch (error: any) {
-      console.error('Error generating SQL via API:', error);
-      let errorMessage = 'Sorry, I encountered an error.';
-      if (error.response && error.response.data && error.response.data.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
       setMessages(prev => [...prev, {
-        type: 'assistant',
-        content: errorMessage
+        id: `err-${Date.now()}`,
+        playgroundId: id,
+        userId: user.id,
+        sender: 'ai',
+        message: error.message || 'An unknown error occurred.',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }]);
-    } finally {
-      setIsApiGenerating(false);
     }
+    setIsApiGenerating(false);
   };
 
   // Handle query execution
-  const handleExecuteQuery = async (query: string) => {
-    try {
-      setCurrentSql(query);
-      await executeQuery();
-
-      if (queryResults) {
-        // Add results message
-        setMessages(prev => [...prev, {
-          type: 'assistant',
-          content: 'Query executed successfully:',
-          results: queryResults
-        }]);
-      }
-    } catch (error) {
-      console.error('Error executing query:', error);
+  const handleExecuteQuery = async (sql: string) => {
+    // Find the last AI message with a sql and queryId
+    const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai' && m.sql && m.queryId);
+    if (!lastAiMsg || !lastAiMsg.queryId) {
       setMessages(prev => [...prev, {
-        type: 'assistant',
-        content: 'Error executing query: ' + (error as Error).message
+        id: `err-${Date.now()}`,
+        playgroundId: id || '',
+        userId: user?.id || '',
+        sender: 'ai',
+        message: 'No valid queryId found for execution. Please generate a query first.',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }]);
+      return;
+    }
+    try {
+      setCurrentSql(sql);
+      setIsApiGenerating(true);
+      // Parse the sql if it's JSON-wrapped
+      let sqlToExecute = sql;
+      if (typeof sql === 'string') {
+        let trimmed = sql.trim();
+        if (trimmed.startsWith('json')) {
+          trimmed = trimmed.replace(/^json\s*/, '');
+        }
+        if (trimmed.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed.query) sqlToExecute = parsed.query;
+          } catch (e) {
+            // fallback: use as-is
+          }
+        }
+        // Always clean the SQL before sending
+        sqlToExecute = extractSQL(sqlToExecute);
+      }
+      const response = await queryService.executeQuery(lastAiMsg.queryId, sqlToExecute);
+      // Extract rows from response
+      let resultRows: any[] = [];
+      if (response.data?.query?.result?.rows && Array.isArray(response.data.query.result.rows)) {
+        resultRows = response.data.query.result.rows;
+      } else if (Array.isArray(response.data?.query?.result)) {
+        resultRows = response.data.query.result;
+      }
+      // Add result message to chat
+      const resultMsg: ApiChatMessage = {
+        id: `result-${Date.now()}`,
+        playgroundId: id || '',
+        userId: user?.id || '',
+        sender: 'ai',
+        message: 'Query executed successfully.',
+        sql: sqlToExecute,
+        results: resultRows,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, resultMsg]);
+      // Save result message in backend chat
+      await chatMessageService.addMessage({
+        playgroundId: id!,
+        userId: user!.id,
+        sender: 'ai',
+        message: 'Query executed successfully.',
+        sql: sqlToExecute,
+        queryId: lastAiMsg.queryId,
+        results: resultRows,
+      });
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        id: `err-${Date.now()}`,
+        playgroundId: id || '',
+        userId: user?.id || '',
+        sender: 'ai',
+        message: 'Error executing query: ' + (error as Error).message,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }]);
+    } finally {
+      setIsApiGenerating(false);
     }
   };
 
@@ -445,12 +483,6 @@ const PlaygroundPage: React.FC = () => {
     navigator.clipboard.writeText(query);
     // You might want to show a toast notification here
   };
-
-  // Mock SQL and explanation for testing
-  // const mockSql =
-  //   "SELECT name, category, price\nFROM products\nWHERE price > 50\nORDER BY price DESC;";
-  // const mockExplanation =
-  //   "This query selects all products with a price greater than $50, ordered by price in descending order. It returns the product name, category, and price columns.";
 
   // Handle exporting data
   const handleExportData = (format: "json" | "csv" | "xml") => {
@@ -622,7 +654,7 @@ const PlaygroundPage: React.FC = () => {
                   <>
                     <span
                       className={`${styles.databaseStatus} ${styles[activeConnection.status]
-                        }`}
+                      }`}
                     ></span>
                     {activeConnection.name}
                   </>
@@ -709,7 +741,7 @@ const PlaygroundPage: React.FC = () => {
                       <p>Loading database schema...</p>
                     </div>
                   ) : (
-                    <DatabaseExplorer
+                  <DatabaseExplorer
                       databases={connections.map(connection => {
                         console.log('Mapping connection:', connection.name, 'Schema:', connection.schema);
                         return {
@@ -723,27 +755,27 @@ const PlaygroundPage: React.FC = () => {
                       })}
                       activeDatabase={activeConnection?.id || ''}
                       onDatabaseChange={handleDatabaseChange}
-                      onTableSelect={(tableName) => {
+                    onTableSelect={(tableName) => {
                         const table = activeConnection?.schema?.tables.find(
-                          (t) => t.name === tableName
+                        (t) => t.name === tableName
+                      );
+                      if (table) {
+                        const columns = table.columns
+                          .map((c) => c.name)
+                          .join(", ");
+                        const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
+                        setCurrentSql(formatSql(sql));
+                      }
+                    }}
+                    onColumnSelect={(tableName, columnName) => {
+                      const currentSql = playground?.currentSql || "";
+                      if (!currentSql.includes(columnName)) {
+                        setCurrentSql(
+                          `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
                         );
-                        if (table) {
-                          const columns = table.columns
-                            .map((c) => c.name)
-                            .join(", ");
-                          const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
-                          setCurrentSql(formatSql(sql));
-                        }
-                      }}
-                      onColumnSelect={(tableName, columnName) => {
-                        const currentSql = playground?.currentSql || "";
-                        if (!currentSql.includes(columnName)) {
-                          setCurrentSql(
-                            `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
-                          );
-                        }
-                      }}
-                    />
+                      }
+                    }}
+                  />
                   )}
                 </div>
               )}
@@ -752,11 +784,11 @@ const PlaygroundPage: React.FC = () => {
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`${styles.messageBox} ${message.type === 'user' ? styles.userMessage : styles.assistantMessage}`}
+                    className={`${styles.messageBox} ${message.sender === 'user' ? styles.userMessage : styles.assistantMessage}`}
                   >
-                    <div>{message.content}</div>
+                    <div>{message.message}</div>
 
-                    {message.query && (
+                    {message.sql && (
                       <div className={styles.queryBox}>
                         <div className={styles.queryHeader}>
                           <span>Generated SQL</span>
@@ -764,41 +796,63 @@ const PlaygroundPage: React.FC = () => {
                             <Button
                               variant="secondary"
                               size="small"
-                              onClick={() => handleCopyQuery(message.query!)}
+                              onClick={() => handleCopyQuery(message.sql!)}
                             >
                               <FiCopy className={styles.icon} /> Copy
                             </Button>
                             <Button
                               variant="primary"
                               size="small"
-                              onClick={() => handleExecuteQuery(message.query!)}
+                              onClick={() => handleExecuteQuery(message.sql!)}
                               disabled={isExecuting || noConnection} 
                             >
                               <FiPlay className={styles.icon} /> Execute
                             </Button>
                           </div>
                         </div>
-                        <pre className={styles.queryContent}>{message.query}</pre>
+                        <pre className={styles.queryContent}>{message.sql}</pre>
                       </div>
                     )}
 
-                    {message.explanation && (
-                      <div className={styles.explanationBox}>
-                        {message.explanation}
-                      </div>
-                    )}
-
-                    {message.results && (
+                    {message.results && Array.isArray(message.results) && message.results.length > 0 && (
                       <div className={styles.resultsBox}>
-                        <div className={styles.resultsPreview}>
-                          {message.results.length} rows returned
+                        <div className={styles.resultsHeader}>
+                          <span>Results ({message.results.length} rows)</span>
+                          <div className={styles.resultsActions}>
+                            <Button size="small" onClick={() => { setExpandedResult(message.results || []); setIsResultModalOpen(true); }}>
+                              <FiMaximize2 className={styles.icon} /> Expand
+                            </Button>
+                            <Button size="small" onClick={() => handleExportData('json')}>
+                              Export JSON
+                            </Button>
+                            <Button size="small" onClick={() => handleExportData('csv')}>
+                              Export CSV
+                            </Button>
+                            <Button size="small" onClick={() => handleExportData('xml')}>
+                              Export XML
+                            </Button>
+                          </div>
                         </div>
-                        <button
-                          className={styles.expandButton} 
-                          onClick={() => { /* TODO: Handle expand to modal for full results */ }}
-                        >
-                          View Full Results
-                        </button>
+                        <div className={styles.resultsTableWrapper}>
+                          <table className={styles.resultsTable}>
+                            <thead>
+                              <tr>
+                                {Object.keys(message.results[0]).map((col) => (
+                                  <th key={col}>{col}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {message.results.map((row, i) => (
+                                <tr key={i}>
+                                  {Object.values(row).map((val, j) => (
+                                    <td key={j}>{String(val)}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -862,6 +916,44 @@ const PlaygroundPage: React.FC = () => {
           <p>
             This action cannot be undone. All queries and history will be lost.
           </p>
+        </div>
+      </Modal>
+
+      {/* Modal for expanded results */}
+      <Modal
+        isOpen={isResultModalOpen}
+        onClose={() => setIsResultModalOpen(false)}
+        title="Query Results"
+        size="large"
+      >
+        {expandedResult && expandedResult.length > 0 ? (
+          <div className={styles.resultsTableWrapper}>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  {Object.keys(expandedResult[0]).map((col) => (
+                    <th key={col}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {expandedResult.map((row, i) => (
+                  <tr key={i}>
+                    {Object.values(row).map((val, j) => (
+                      <td key={j}>{String(val)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div>No results to display.</div>
+        )}
+        <div className={styles.resultsModalActions}>
+          <Button onClick={() => handleExportData('json')}>Export JSON</Button>
+          <Button onClick={() => handleExportData('csv')}>Export CSV</Button>
+          <Button onClick={() => handleExportData('xml')}>Export XML</Button>
         </div>
       </Modal>
     </div>

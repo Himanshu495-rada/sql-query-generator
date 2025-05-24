@@ -5,6 +5,7 @@ import Button from "./Button";
 import { GoSidebarCollapse } from "react-icons/go";
 import { FiUser, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import ThemeToggle from "./ThemeToggle";
+import authService from "../../services/authService";
 
 interface NavbarProps {
   user?: {
@@ -82,9 +83,11 @@ const Navbar: React.FC<NavbarProps> = ({
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.logout();
     setIsDropdownOpen(false);
     onLogout?.();
+    navigate("/login");
   };
 
   const handleProfileClick = () => {

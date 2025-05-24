@@ -16,7 +16,7 @@ export interface ApiQueryResponseData {
   sandboxDbId: string | null;
   prompt: string;
   sqlQuery: string; 
-  explanation: string;
+  //explanation: string;
   result: any | null; 
   error: any | null; 
   executionTime: number | null;
@@ -46,9 +46,25 @@ const queryService = {
       const response = await axiosInstance.post<
         GenerateQueryApiResponse
       >('/queries/generate', payload);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error in queryService.generateQuery:', error);
+      throw error;
+    }
+  },
+
+  executeQuery: async (
+    queryId: string,
+    sqlQuery: string
+  ): Promise<any> => {
+    try {
+      const response = await axiosInstance.post('/queries/execute', {
+        queryId,
+        sqlQuery,
+      });
+      return response;
+    } catch (error) {
+      console.error('Error in queryService.executeQuery:', error);
       throw error;
     }
   },
