@@ -3,298 +3,373 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--color-background); /* Use theme variable */
-  color: var(--color-text); /* Use theme variable */
+  background-color: var(--color-background);
 }
 
 .mainContainer {
   display: flex;
   flex: 1;
   overflow: hidden;
+  background-color: var(--color-background);
 }
 
 .chatArea {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px 30px;
-  overflow-y: hidden;
-  background-color: var(--color-background); /* Use theme variable */
-}
-
-.messageList {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding-right: 15px;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.messageBubble {
-  padding: 12px 18px;
-  border-radius: 16px;
-  max-width: 70%;
-  word-wrap: break-word;
-  line-height: 1.6;
-  box-shadow: var(--shadow-sm, 0 2px 5px rgba(0,0,0,0.1)); /* Use theme shadow or a generic one */
+  height: 100%;
+  background-color: var(--color-background);
   position: relative;
 }
 
+.messageList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for message list */
+.messageList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messageList::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: 4px;
+}
+
+.messageList::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.messageList::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+.messageBubble {
+  padding: 16px 20px;
+  border-radius: 12px;
+  max-width: 85%;
+  word-wrap: break-word;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  position: relative;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
+}
+
 .userMessage {
-  background-color: var(--color-primary); /* Already using theme variable */
-  color: var(--color-text-on-primary); /* Already using theme variable */
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
   align-self: flex-end;
-  border-bottom-right-radius: 6px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
 }
 
 .aiMessage {
-  background-color: var(--color-surface-secondary, #f0f0f0); /* Theme variable for AI messages, with a light theme fallback */
-  color: var(--color-text); /* Use theme variable */
+  background-color: var(--color-surface);
+  color: var(--color-text);
   align-self: flex-start;
-  border-bottom-left-radius: 6px;
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-sm);
 }
 
 .messageSenderInfo {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .senderName {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: inherit;
-  opacity: 0.9;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.aiMessage .senderName {
- color: var(--color-text-secondary); /* Use theme variable */
+.userMessage .senderName {
+  color: var(--color-text-on-primary);
+  opacity: 0.9;
 }
 
 .timestamp {
   font-size: 0.75rem;
-  color: inherit;
-  opacity: 0.7;
+  color: var(--color-text-secondary);
 }
 
-.aiMessage .timestamp {
- color: var(--color-text-secondary); /* Use theme variable */
+.userMessage .timestamp {
+  color: var(--color-text-on-primary);
+  opacity: 0.8;
 }
 
 .messageBubble p {
   margin: 0;
-  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .sqlBlock {
-  position: relative;
-  background-color: var(--color-background-code-block, #1e1e1e); /* Theme variable for SQL block bg, with a dark fallback for contrast in light mode if not well defined */
-  color: var(--color-text-code-block, #d4d4d4); /* Theme variable for SQL block text, with a light fallback */
-  padding: 16px;
-  padding-top: 52px;
+  margin-top: 16px;
+  background-color: var(--color-surface-secondary);
   border-radius: 8px;
-  margin-top: 12px;
-  overflow-x: auto;
-  font-family: var(--font-family-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace);
-  border: 1px solid var(--color-border); /* Use theme variable */
+  overflow: hidden;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  position: relative;
 }
 
-.sqlBlock pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
+.sqlHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--color-surface-tertiary);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.sqlBlock code {
-  font-size: 0.9rem;
+.sqlTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sqlActions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   display: flex;
   gap: 8px;
-  background-color: var(--color-surface-tertiary, #2a2a2a); /* Theme variable for actions bg, with a distinct fallback */
-  padding: 6px 8px;
-  border-radius: 6px;
-  z-index: 1;
 }
 
-.sqlActions .sqlActionButton {
-  background-color: transparent;
-  color: var(--color-text-secondary); /* Theme variable */
+.sqlActionButton {
+  background: none;
   border: none;
+  color: var(--color-text-secondary);
   padding: 6px 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  border-radius: 4px;
+  font-size: 0.875rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.sqlActionButton:hover {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+}
+
+.sqlContent {
+  padding: 16px;
+  overflow-x: auto;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  line-height: 1;
+  margin: 12px;
 }
 
-.sqlActions .sqlActionButton:hover {
-  background-color: var(--color-button-secondary-hover-bg, #3a3a3a); /* Theme variable */
-  color: var(--color-button-secondary-hover-text, #ffffff); /* Theme variable */
+.sqlContent pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.sqlActions .sqlActionButton:disabled,
-.sqlActions .sqlActionButton:disabled:hover {
-  color: var(--color-button-disabled-text, #6a6a6a); /* Theme variable */
-  background-color: transparent;
-  cursor: not-allowed;
-}
-
-.sqlActions .sqlActionButton .icon {
-  font-size: 0.95em;
-  display: inline-block;
-}
-
-.typingIndicator {
-  font-style: italic;
-  color: var(--color-text-secondary); /* Use theme variable */
-  padding: 10px 0;
-  align-self: flex-start;
+.sqlContent code {
   font-size: 0.9rem;
+  color: var(--color-text);
 }
 
 .inputSection {
-  padding: 20px 0px;
-  border-top: 1px solid var(--color-border); /* Use theme variable */
-  background-color: var(--color-background); /* Use theme variable */
+  padding: 24px;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.inputTextArea {
-  width: 100%;
-  min-height: 80px;
-  padding: 14px 18px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border); /* Use theme variable */
-  background-color: var(--color-surface); /* Use theme variable */
-  color: var(--color-text); /* Use theme variable */
-  font-size: 1rem;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.5;
-}
-
-.inputTextArea::placeholder {
-  color: var(--color-text-secondary); /* Use theme variable */
-}
-
-.inputTextArea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-focus-ring, rgba(0, 123, 255, 0.25));
+  gap: 16px;
 }
 
 .inputControls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
 
 .databaseSelector {
-  padding: 12px 15px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border); /* Use theme variable */
-  background-color: var(--color-surface); /* Use theme variable */
-  color: var(--color-text); /* Use theme variable */
-  font-size: 0.9rem;
-  flex-grow: 1;
-  max-width: 350px;
-  transition: border-color 0.2s ease;
+  min-width: 200px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .databaseSelector:hover {
-  border-color: var(--color-border-medium, var(--color-text-secondary)); /* Use theme variable or fallback */
+  border-color: var(--color-primary);
 }
 
 .databaseSelector:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.inputTextArea {
+  flex: 1;
+  min-height: 60px;
+  max-height: 200px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.inputTextArea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.inputTextArea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .sendButton {
-  padding: 12px 24px !important;
-  font-weight: 500 !important;
-  border-radius: 8px !important;
+  padding: 10px 20px;
+  border-radius: 6px;
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  height: 40px;
 }
 
+.sendButton:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
 
-/* Responsive adjustments */
+.sendButton:disabled {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.typingIndicator {
+  padding: 8px 16px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive styles */
 @media (max-width: 768px) {
   .chatArea {
-    padding: 15px 20px;
+    padding: 16px;
+  }
+
+  .messageList {
+    padding: 16px;
+    gap: 16px;
   }
 
   .messageBubble {
-    max-width: 85%;
-    padding: 10px 15px;
+    max-width: 90%;
+    padding: 14px 16px;
   }
 
   .sqlBlock {
-    padding-top: 45px;
+    margin-top: 12px;
   }
 
-  .inputTextArea {
-    min-height: 70px;
-    padding: 12px 15px;
+  .inputSection {
+    padding: 16px;
   }
-  
+
   .inputControls {
     flex-direction: column;
-    align-items: stretch;
   }
 
   .databaseSelector {
-    max-width: 100%;
+    width: 100%;
+  }
+
+  .inputTextArea {
+    width: 100%;
   }
 
   .sendButton {
-    padding: 12px 20px !important;
+    width: 100%;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .chatArea {
-    padding: 10px 15px;
+    padding: 12px;
   }
+
   .messageList {
-    gap: 15px;
+    padding: 12px;
+    gap: 12px;
   }
+
   .messageBubble {
-    font-size: 0.9rem;
+    max-width: 95%;
+    padding: 12px 14px;
   }
-  .messageBubble p {
-    font-size: 0.9rem;
+
+  .sqlBlock {
+    margin-top: 10px;
   }
-  .sqlBlock code {
-    font-size: 0.85rem;
-  }
-  .sqlActions .sqlActionButton {
-    font-size: 0.8rem;
-    padding: 5px 8px;
-  }
-  .inputTextArea {
-    font-size: 0.95rem;
-  }
-  .databaseSelector {
-    font-size: 0.85rem;
+
+  .sqlHeader {
     padding: 10px 12px;
   }
-  .sendButton {
-    font-size: 0.9rem !important;
-    padding: 10px 15px !important;
+
+  .sqlContent {
+    padding: 12px;
+    margin: 8px;
+  }
+
+  .inputSection {
+    padding: 12px;
   }
 }

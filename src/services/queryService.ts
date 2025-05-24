@@ -16,7 +16,7 @@ export interface ApiQueryResponseData {
   sandboxDbId: string | null;
   prompt: string;
   sqlQuery: string; 
-  //explanation: string;
+  explanation?: string;
   result: any | null; 
   error: any | null; 
   executionTime: number | null;

@@ -77,88 +77,6 @@ const PlaygroundPage: React.FC = () => {
   // Local loading state for API call from chat
   const [isApiGenerating, setIsApiGenerating] = useState(false);
 
-  const results = [
-    {
-      id: 1,
-      product_name: "Smartphone X",
-      category: "Electronics",
-      price: 899.99,
-      stock: 45,
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      product_name: "Wireless Headphones",
-      category: "Electronics",
-      price: 159.99,
-      stock: 78,
-      rating: 4.5,
-    },
-    {
-      id: 3,
-      product_name: "Coffee Maker",
-      category: "Home & Kitchen",
-      price: 89.99,
-      stock: 32,
-      rating: 4.2,
-    },
-    {
-      id: 4,
-      product_name: "Running Shoes",
-      category: "Footwear",
-      price: 129.99,
-      stock: 56,
-      rating: 4.7,
-    },
-    {
-      id: 5,
-      product_name: "Smart Watch",
-      category: "Electronics",
-      price: 249.99,
-      stock: 23,
-      rating: 4.6,
-    },
-    {
-      id: 6,
-      product_name: "Backpack",
-      category: "Accessories",
-      price: 59.99,
-      stock: 98,
-      rating: 4.4,
-    },
-    {
-      id: 7,
-      product_name: "Bluetooth Speaker",
-      category: "Electronics",
-      price: 79.99,
-      stock: 41,
-      rating: 4.3,
-    },
-    {
-      id: 8,
-      product_name: "Yoga Mat",
-      category: "Fitness",
-      price: 29.99,
-      stock: 120,
-      rating: 4.1,
-    },
-    {
-      id: 9,
-      product_name: "Sunglasses",
-      category: "Accessories",
-      price: 149.99,
-      stock: 37,
-      rating: 4.4,
-    },
-    {
-      id: 10,
-      product_name: "Water Bottle",
-      category: "Fitness",
-      price: 19.99,
-      stock: 145,
-      rating: 4.0,
-    },
-  ];
 
   // Add sample data for testing
   const [sampleResults] = useState([]);
@@ -397,7 +315,6 @@ const PlaygroundPage: React.FC = () => {
 
   // Handle query execution
   const handleExecuteQuery = async (sql: string) => {
-    // Find the last AI message with a sql and queryId
     const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai' && m.sql && m.queryId);
     if (!lastAiMsg || !lastAiMsg.queryId) {
       setMessages(prev => [...prev, {
@@ -485,9 +402,15 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Handle exporting data
-  const handleExportData = (format: "json" | "csv" | "xml") => {
-    // This is just for UI testing - normally you'd use exportUtils here
-    const data = queryResults || sampleResults;
+  const handleExportData = (format: "json" | "csv" | "xml", dataToExport?: any[]) => {
+    const data = dataToExport || queryResults || sampleResults; // Use passed data, fallback to hook's queryResults or sample
+
+    if (!data || data.length === 0) {
+      console.warn("No data available to export.");
+      // Optionally, show a user-facing message here
+      alert("No results to export.");
+      return;
+    }
 
     // Create a simple download simulation
     const element = document.createElement("a");
@@ -801,8 +724,8 @@ const PlaygroundPage: React.FC = () => {
                               <FiCopy className={styles.icon} /> Copy
                             </Button>
                             <Button
-                              variant="primary"
-                              size="small"
+                        variant="primary"
+                        size="small"
                               onClick={() => handleExecuteQuery(message.sql!)}
                               disabled={isExecuting || noConnection} 
                             >
@@ -811,7 +734,7 @@ const PlaygroundPage: React.FC = () => {
                           </div>
                         </div>
                         <pre className={styles.queryContent}>{message.sql}</pre>
-                      </div>
+                    </div>
                     )}
 
                     {message.results && Array.isArray(message.results) && message.results.length > 0 && (
@@ -822,13 +745,13 @@ const PlaygroundPage: React.FC = () => {
                             <Button size="small" onClick={() => { setExpandedResult(message.results || []); setIsResultModalOpen(true); }}>
                               <FiMaximize2 className={styles.icon} /> Expand
                             </Button>
-                            <Button size="small" onClick={() => handleExportData('json')}>
+                            <Button size="small" onClick={() => handleExportData('json', message.results)}>
                               Export JSON
                             </Button>
-                            <Button size="small" onClick={() => handleExportData('csv')}>
+                            <Button size="small" onClick={() => handleExportData('csv', message.results)}>
                               Export CSV
                             </Button>
-                            <Button size="small" onClick={() => handleExportData('xml')}>
+                            <Button size="small" onClick={() => handleExportData('xml', message.results)}>
                               Export XML
                             </Button>
                           </div>
@@ -853,8 +776,8 @@ const PlaygroundPage: React.FC = () => {
                             </tbody>
                           </table>
                         </div>
-                      </div>
-                    )}
+                        </div>
+                      )}
                   </div>
                 ))}
                 {isGenerating && (
@@ -951,9 +874,9 @@ const PlaygroundPage: React.FC = () => {
           <div>No results to display.</div>
         )}
         <div className={styles.resultsModalActions}>
-          <Button onClick={() => handleExportData('json')}>Export JSON</Button>
-          <Button onClick={() => handleExportData('csv')}>Export CSV</Button>
-          <Button onClick={() => handleExportData('xml')}>Export XML</Button>
+          <Button onClick={() => handleExportData('json', expandedResult || undefined)}>Export JSON</Button>
+          <Button onClick={() => handleExportData('csv', expandedResult || undefined)}>Export CSV</Button>
+          <Button onClick={() => handleExportData('xml', expandedResult || undefined)}>Export XML</Button>
         </div>
       </Modal>
     </div>

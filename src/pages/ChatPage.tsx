@@ -8,6 +8,7 @@ import Button from '../components/shared/Button';
 import styles from './ChatPage.module.css';
 import authService from '../services/authService';
 import queryService, { ApiQueryResponseData, GenerateQueryApiResponse, ParsedSqlData } from '../services/queryService';
+import { FiCopy, FiPlay, FiCode } from 'react-icons/fi';
 
 interface Message {
   id: string;
@@ -175,6 +176,40 @@ const ChatPage: React.FC = () => {
       .join(' ');
   };
 
+  const renderSqlBlock = (sql: string) => (
+    <div className={styles.sqlBlock}>
+      <div className={styles.sqlHeader}>
+        <div className={styles.sqlTitle}>
+          <FiCode size={16} />
+          Generated SQL Query
+        </div>
+        <div className={styles.sqlActions}>
+          <button
+            className={styles.sqlActionButton}
+            onClick={() => handleCopySql(sql)}
+            title="Copy SQL"
+          >
+            <FiCopy size={14} />
+            Copy
+          </button>
+          <button
+            className={styles.sqlActionButton}
+            onClick={() => handleRunSql(sql)}
+            title="Run SQL"
+          >
+            <FiPlay size={14} />
+            Run
+          </button>
+        </div>
+      </div>
+      <div className={styles.sqlContent}>
+        <pre>
+          <code>{sql}</code>
+        </pre>
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.chatPage}>
       <Navbar
@@ -182,88 +217,82 @@ const ChatPage: React.FC = () => {
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         appName={formatPageTitle()}
-        // Add other Navbar props if needed, like onLogout, onSettingsClick
         onLogout={() => { authService.logout(); navigate('/login');}}
         onSettingsClick={() => navigate('/settings')}
       />
       <div className={styles.mainContainer}>
         {isSidebarVisible && (
-            <Sidebar
-                isVisible={isSidebarVisible}
-                // Pass necessary props to Sidebar, e.g., playgrounds, databases
-                // For now, keeping it simple or using Dashboard's approach
-                playgrounds={[]}
-                databases={connections || []}
-                onPlaygroundClick={(id) => navigate(`/playground/${id}`)}
-                onCreatePlayground={() => navigate('/playground')} // Or open a modal
-                onDatabaseClick={(id) => console.log('DB clicked:', id)} // Or navigate to DB details
-                onConnectDatabase={() => navigate('/databases')}
-                onCollapse={() => setIsSidebarVisible(false)}
-            />
+          <Sidebar
+            isVisible={isSidebarVisible}
+            playgrounds={[]}
+            databases={connections || []}
+            onPlaygroundClick={(id) => navigate(`/playground/${id}`)}
+            onCreatePlayground={() => navigate('/playground')}
+            onDatabaseClick={(id) => console.log('DB clicked:', id)}
+            onConnectDatabase={() => navigate('/databases')}
+          />
         )}
         <div className={styles.chatArea}>
           <div className={styles.messageList}>
-            {messages.map((msg) => (
-              <div key={msg.id} className={`${styles.messageBubble} ${msg.sender === 'user' ? styles.userMessage : styles.aiMessage}`}>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`${styles.messageBubble} ${
+                  message.sender === 'user' ? styles.userMessage : styles.aiMessage
+                }`}
+              >
                 <div className={styles.messageSenderInfo}>
-                  <span className={styles.senderName}>{msg.sender === 'user' ? (user?.name || 'You') : 'AI Assistant'}</span>
-                  <span className={styles.timestamp}>{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                  <span className={styles.senderName}>
+                    {message.sender === 'user' ? 'You' : 'AI Assistant'}
+                  </span>
+                  <span className={styles.timestamp}>
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
-                <p>{msg.text}</p>
-                {msg.sql && (
-                  <div className={styles.sqlBlock}>
-                    <div className={styles.sqlActions}>
-                      <Button 
-                        size="small"
-                        onClick={() => handleRunSql(msg.sql!)} 
-                        disabled={!selectedDatabaseId}
-                        className={styles.sqlActionButton} 
-                      >
-                        <span className={styles.icon}>►</span> Run
-                      </Button>
-                      <Button 
-                        size="small"
-                        onClick={() => handleCopySql(msg.sql!)}
-                        className={styles.sqlActionButton} 
-                      >
-                        <span className={styles.icon}>📋</span> Copy
-                      </Button>
-                    </div>
-                    <pre><code>{msg.sql}</code></pre>
-                  </div>
-                )}
+                <p>{message.text}</p>
+                {message.sql && renderSqlBlock(message.sql)}
               </div>
             ))}
-            {isLoading && <div className={styles.typingIndicator}>AI is thinking...</div>}
+            {isLoading && (
+              <div className={styles.typingIndicator}>
+                <div className={styles.typingDots}></div>
+                AI is thinking...
+              </div>
+            )}
           </div>
           <div className={styles.inputSection}>
-            <textarea
-              className={styles.inputTextArea}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Enter your follow-up here..."
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
             <div className={styles.inputControls}>
-                <select 
-                    className={styles.databaseSelector}
-                    value={selectedDatabaseId || ''}
-                    onChange={(e) => setSelectedDatabaseId(e.target.value || null)}
-                    disabled={isDbLoading || connections.length === 0}
-                >
-                    <option value="" disabled={connections.length > 0}>{(isDbLoading) ? 'Loading DBs...' : (connections.length === 0 ? 'No connections' : 'Select Database')}</option>
-                    {connections.map(conn => (
-                        <option key={conn.id} value={conn.id}>{conn.name}</option>
-                    ))}
-                </select>
-                <Button onClick={handleSendMessage} disabled={!inputValue.trim() || isLoading} className={styles.sendButton}>
-                 Send
-                </Button>
+              <select
+                className={styles.databaseSelector}
+                value={selectedDatabaseId || ''}
+                onChange={(e) => setSelectedDatabaseId(e.target.value)}
+              >
+                <option value="">Select a database</option>
+                {connections?.map((conn) => (
+                  <option key={conn.id} value={conn.id}>
+                    {conn.name}
+                  </option>
+                ))}
+              </select>
+              <textarea
+                className={styles.inputTextArea}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type your message here..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <button
+                className={styles.sendButton}
+                onClick={handleSendMessage}
+                disabled={!inputValue.trim() || !selectedDatabaseId || isLoading}
+              >
+                Send
+              </button>
             </div>
           </div>
         </div>
