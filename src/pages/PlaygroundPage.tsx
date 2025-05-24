@@ -3,19 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./PlaygroundPage.module.css";
 import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
-import PromptInput from "../components/playground/PromptInput";
-import SqlEditor from "../components/playground/SqlEditor";
-import ResultsTable from "../components/playground/ResultsTable";
 import DatabaseExplorer from "../components/playground/DatabaseExplorer";
-import QueryHistory, { QueryHistoryItem } from "../components/playground/QueryHistory";
 import Button from "../components/shared/Button";
 import Modal, { ModalFooter } from "../components/shared/Modal";
 import { useAuth } from "../contexts/AuthContext";
 import { useDatabase } from "../contexts/DatabaseContext";
 import usePlayground from "../hooks/usePlayground";
-import { formatSql, isDmlQuery } from "../utils/sqlFormatter";
+import { formatSql } from "../utils/sqlFormatter";
 import playgroundService from "../services/playgroundService";
-import { Playground, PlaygroundConnection } from "../services/playgroundService";
+import queryService, { GenerateQueryPayload, ParsedSqlData } from '../services/queryService';
+import { FiCopy, FiPlay } from 'react-icons/fi';
 
 // Define interfaces for the playground data structure
 interface PlaygroundItem {
@@ -48,7 +45,6 @@ const PlaygroundPage: React.FC = () => {
     createPlayground,
     savePlayground,
     executeQuery,
-    generateSqlFromPrompt,
     setCurrentSql,
     isExecuting,
     isGenerating,
@@ -74,6 +70,9 @@ const PlaygroundPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [prompt, setPrompt] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Local loading state for API call from chat
+  const [isApiGenerating, setIsApiGenerating] = useState(false);
 
   const results = [
     {
@@ -160,7 +159,7 @@ const PlaygroundPage: React.FC = () => {
 
   // Add sample data for testing
   const [sampleResults] = useState([]);
-  
+
   // State for recent playgrounds to show in sidebar
   const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>([]);
 
@@ -198,7 +197,7 @@ const PlaygroundPage: React.FC = () => {
       handleCreateNewPlayground();
     }
   }, [id, playground]);
-  
+
   // Effect to fetch playgrounds for the sidebar
   useEffect(() => {
     const fetchPlaygrounds = async () => {
@@ -208,12 +207,12 @@ const PlaygroundPage: React.FC = () => {
         const sortedPlaygrounds = [...playgroundsData].sort(
           (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
-        
+
         setRecentPlaygrounds(sortedPlaygrounds.map(pg => ({
           id: pg.id,
           name: pg.name,
           lastUsed: new Date(pg.updatedAt),
-          databaseName: pg.connections?.length > 0 
+          databaseName: pg.connections?.length > 0
             ? pg.connections.map(conn => conn.connection.name).join(", ")
             : 'No database'
         })));
@@ -221,7 +220,7 @@ const PlaygroundPage: React.FC = () => {
         console.error('Error fetching playgrounds:', error);
       }
     };
-    
+
     fetchPlaygrounds();
   }, [connections]);
 
@@ -260,7 +259,7 @@ const PlaygroundPage: React.FC = () => {
         if (connection) {
           setIsLoadingSchema(true);
           setActiveConnection(connection);
-          
+
           // Load the schema for the selected database if not already loaded
           try {
             if (!connection.schema || Object.keys(connection.schema).length === 0) {
@@ -318,32 +317,103 @@ const PlaygroundPage: React.FC = () => {
 
   // Handle prompt submission
   const handlePromptSubmit = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isApiGenerating || isGenerating) return;
 
-    // Add user message
-    setMessages(prev => [...prev, { type: 'user', content: prompt }]);
+    const userMessage: ChatMessage = { type: 'user', content: prompt };
+    setMessages(prev => [...prev, userMessage]);
     const currentPrompt = prompt;
     setPrompt('');
+    setIsApiGenerating(true);
 
-    try {
-      // Generate SQL from prompt
-      await generateSqlFromPrompt(currentPrompt);
-      
-      // Add assistant message with query and explanation
-      if (playground?.currentSql && playground?.currentExplanation) {
-        setMessages(prev => [...prev, {
-          type: 'assistant',
-          content: 'Here\'s the SQL query based on your request:',
-          query: playground.currentSql,
-          explanation: playground.currentExplanation
-        }]);
-      }
-    } catch (error) {
-      console.error('Error generating SQL:', error);
+    if (!id || !activeConnection?.id) {
       setMessages(prev => [...prev, {
         type: 'assistant',
-        content: 'Sorry, I encountered an error while generating the SQL query.'
+        content: 'Error: Playground ID or Active Connection ID is missing to generate SQL.'
       }]);
+      setIsApiGenerating(false);
+      return;
+    }
+
+    const payload: GenerateQueryPayload = {
+      prompt: currentPrompt,
+      playgroundId: id,
+      connectionId: activeConnection.id,
+    };
+
+    try {
+      const response = await queryService.generateQuery(payload);
+      console.log('IMP Response Data:', response);
+
+      // Updated to use response.data.query
+      if (!response.success || !response.data || !response.data.query) {
+        throw new Error(response.message || 'API returned unsuccessful response or missing data.');
+      }
+      const apiQueryData = response.data.query;
+
+      let finalSql = '';
+      let finalExplanation = '';
+
+      if (apiQueryData.sqlQuery && typeof apiQueryData.sqlQuery === 'string') {
+        const jsonStringInSql = apiQueryData.sqlQuery
+          .replace(/^```json\s*/, '') 
+          .replace(/\s*```$/, '');    
+        try {
+          // Pre-process the string to handle concatenations like "..." + "..."
+          // This regex replaces '"' (end of string part) + '"' (start of next string part) with an empty string,
+          // effectively merging the content of the string parts.
+          const processedForJsonParse = jsonStringInSql.replace(/"\s*\+\s*"/g, "");
+          const parsedSqlData: ParsedSqlData = JSON.parse(processedForJsonParse);
+          finalSql = parsedSqlData.query || '';
+          finalExplanation = parsedSqlData.explanation || apiQueryData.explanation || 'No detailed explanation provided.';
+        } catch (parseError) {
+          console.warn('Failed to parse inner JSON from sqlQuery, attempting fallback:', parseError);
+          // Fallback: Try to extract SQL if it's not JSON but a direct SQL string with markdown backticks
+          const sqlMatch = apiQueryData.sqlQuery.match(/```(?:sql)?\s*([\s\S]*?)\s*```/);
+          if (sqlMatch && sqlMatch[1]) {
+            finalSql = sqlMatch[1].trim();
+          } else if (!apiQueryData.sqlQuery.includes('json') && !apiQueryData.sqlQuery.includes('{')) { 
+            finalSql = apiQueryData.sqlQuery.trim(); 
+          }
+          finalExplanation = apiQueryData.explanation || 'Could not parse SQL details, showing raw output if available.';
+          if (!finalSql && !jsonStringInSql.includes('{')) finalSql = jsonStringInSql; 
+        }
+      } else {
+        finalExplanation = apiQueryData.explanation || 'No SQL query was generated by the API.';
+      }
+
+      // Update the usePlayground hook's state for current SQL
+      setCurrentSql(finalSql);
+      // The hook might not have a dedicated setCurrentExplanation, 
+      // so finalExplanation is used directly in the message below.
+
+      if (finalSql) {
+        setMessages(prev => [...prev, {
+          type: 'assistant',
+          content: 'Here\'s the generated SQL and explanation:', 
+          query: finalSql,
+          explanation: finalExplanation
+        }]);
+      } else {
+         setMessages(prev => [...prev, {
+          type: 'assistant',
+          content: finalExplanation || 'No SQL query was generated or extracted.'
+        }]);
+      }
+
+    } catch (error: any) {
+      console.error('Error generating SQL via API:', error);
+      let errorMessage = 'Sorry, I encountered an error.';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setMessages(prev => [...prev, {
+        type: 'assistant',
+        content: errorMessage
+      }]);
+    } finally {
+      setIsApiGenerating(false);
     }
   };
 
@@ -352,7 +422,7 @@ const PlaygroundPage: React.FC = () => {
     try {
       setCurrentSql(query);
       await executeQuery();
-      
+
       if (queryResults) {
         // Add results message
         setMessages(prev => [...prev, {
@@ -377,10 +447,10 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Mock SQL and explanation for testing
-  const mockSql =
-    "SELECT name, category, price\nFROM products\nWHERE price > 50\nORDER BY price DESC;";
-  const mockExplanation =
-    "This query selects all products with a price greater than $50, ordered by price in descending order. It returns the product name, category, and price columns.";
+  // const mockSql =
+  //   "SELECT name, category, price\nFROM products\nWHERE price > 50\nORDER BY price DESC;";
+  // const mockExplanation =
+  //   "This query selects all products with a price greater than $50, ordered by price in descending order. It returns the product name, category, and price columns.";
 
   // Handle exporting data
   const handleExportData = (format: "json" | "csv" | "xml") => {
@@ -467,7 +537,7 @@ const PlaygroundPage: React.FC = () => {
   // Handle playground deletion
   const handleDeletePlayground = async () => {
     if (!id) return;
-    
+
     try {
       const success = await playgroundService.deletePlayground(id);
       if (success) {
@@ -551,9 +621,8 @@ const PlaygroundPage: React.FC = () => {
                 {activeConnection ? (
                   <>
                     <span
-                      className={`${styles.databaseStatus} ${
-                        styles[activeConnection.status]
-                      }`}
+                      className={`${styles.databaseStatus} ${styles[activeConnection.status]
+                        }`}
                     ></span>
                     {activeConnection.name}
                   </>
@@ -678,17 +747,15 @@ const PlaygroundPage: React.FC = () => {
                   )}
                 </div>
               )}
-
+              {/* Chat Area Start */}
               <div className={styles.chatContainer} ref={chatContainerRef}>
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`${styles.messageBox} ${
-                      message.type === 'user' ? styles.userMessage : styles.assistantMessage
-                    }`}
+                    className={`${styles.messageBox} ${message.type === 'user' ? styles.userMessage : styles.assistantMessage}`}
                   >
                     <div>{message.content}</div>
-                    
+
                     {message.query && (
                       <div className={styles.queryBox}>
                         <div className={styles.queryHeader}>
@@ -699,36 +766,36 @@ const PlaygroundPage: React.FC = () => {
                               size="small"
                               onClick={() => handleCopyQuery(message.query!)}
                             >
-                              Copy
+                              <FiCopy className={styles.icon} /> Copy
                             </Button>
                             <Button
                               variant="primary"
                               size="small"
                               onClick={() => handleExecuteQuery(message.query!)}
+                              disabled={isExecuting || noConnection} 
                             >
-                              Execute
+                              <FiPlay className={styles.icon} /> Execute
                             </Button>
                           </div>
                         </div>
                         <pre className={styles.queryContent}>{message.query}</pre>
                       </div>
                     )}
-                    
+
                     {message.explanation && (
                       <div className={styles.explanationBox}>
                         {message.explanation}
                       </div>
                     )}
-                    
+
                     {message.results && (
                       <div className={styles.resultsBox}>
                         <div className={styles.resultsPreview}>
-                          {/* Show a preview of the results */}
                           {message.results.length} rows returned
                         </div>
                         <button
-                          className={styles.expandButton}
-                          onClick={() => {/* Handle expand to modal */}}
+                          className={styles.expandButton} 
+                          onClick={() => { /* TODO: Handle expand to modal for full results */ }}
                         >
                           View Full Results
                         </button>
@@ -736,31 +803,38 @@ const PlaygroundPage: React.FC = () => {
                     )}
                   </div>
                 ))}
-              </div>
-
-              <div className={styles.inputContainer}>
-                <div className={styles.inputWrapper}>
-                  <textarea
-                    className={styles.promptInput}
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe what you want to query in natural language..."
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handlePromptSubmit();
-                      }
-                    }}
-                  />
-                  <button
-                    className={styles.sendButton}
-                    onClick={handlePromptSubmit}
-                    disabled={!prompt.trim() || isGenerating}
-                  >
-                    {isGenerating ? 'Generating...' : 'Send'}
-                  </button>
+                {isGenerating && (
+                    <div className={`${styles.messageBox} ${styles.assistantMessage} ${styles.typingIndicatorContainer} /* Ensure these styles are defined */`}>
+                         <p className={styles.typingIndicator}>AI is thinking...</p>
+                    </div>
+                )}
+                <div className={styles.inputContainer}>
+                  <div className={styles.inputWrapper}>
+                    <textarea
+                      className={styles.promptInput}
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="Describe what you want to query in natural language..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handlePromptSubmit();
+                        }
+                      }}
+                      rows={3}
+                    />
+                    <Button
+                      className={styles.sendButton}
+                      onClick={handlePromptSubmit}
+                      disabled={!prompt.trim() || isApiGenerating || isGenerating}
+                      variant="primary"
+                    >
+                      {isApiGenerating || isGenerating ? 'Generating...' : 'Send'}
+                    </Button>
+                  </div>
                 </div>
               </div>
+              {/* Chat Area End */}
             </div>
           )}
         </div>

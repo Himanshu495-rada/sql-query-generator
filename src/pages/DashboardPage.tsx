@@ -440,6 +440,25 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
+  // Data for SQL Templates
+  const sqlTemplates = [
+    {
+      title: "Generate SQL",
+      description: "Generate SQL from text",
+      slug: "generate-sql",
+    },
+    {
+      title: "Optimize SQL",
+      description: "Optimize SQL queries",
+      slug: "optimize-sql",
+    },
+    {
+      title: "Explain SQL",
+      description: "Get a detailed explanation of your SQL query",
+      slug: "explain-sql",
+    },
+  ];
+
   // Handle creating a new playground
   const handleCreatePlayground = async () => {
     if (!newPlaygroundName.trim()) {
@@ -626,6 +645,30 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* SQL Templates Section */}
+            <div className={styles.sqlTemplatesSection}>
+              <h2 className={styles.sqlTemplatesTitle}>SQL Templates</h2>
+              <div className={styles.sqlTemplatesCardContainer}>
+                {sqlTemplates.map((template, index) => (
+                  <div 
+                    key={index} 
+                    className={styles.sqlTemplateCard}
+                    onClick={() => navigate(`/chat/${template.slug}`)} // Navigate on click
+                    role="button" // Accessibility
+                    tabIndex={0} // Accessibility
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        navigate(`/chat/${template.slug}`);
+                      }
+                    }} // Accessibility for keyboard navigation
+                  >
+                    <h3>{template.title}</h3>
+                    <p>{template.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className={styles.dashboardGridContainer}>

@@ -449,6 +449,76 @@
   margin-top: 4px;
 }
 
+/* SQL Templates Section */
+.sqlTemplatesSection {
+  margin-bottom: 32px; /* Consistent spacing with other sections */
+}
+
+.sqlTemplatesTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 20px; /* Space between title and cards */
+}
+
+.sqlTemplatesCardContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
+  gap: 20px;
+}
+
+.sqlTemplateCard {
+  background-color: var(--color-surface); /* Uses standard card background from theme */
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer; /* Space between title and description within the card */
+}
+
+.sqlTemplateCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  
+}
+
+.sqlTemplateCard h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.sqlTemplateCard p {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments for SQL Templates card container */
+@media (max-width: 900px) { 
+  .sqlTemplatesCardContainer {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 600px) { 
+  .sqlTemplatesCardContainer {
+    grid-template-columns: 1fr; /* Stack cards on small screens */
+  }
+  .sqlTemplatesTitle {
+    font-size: 20px; /* Slightly smaller title on mobile */
+  }
+}
+
+.statInfo {
+  flex: 1;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .dashboardGridContainer {

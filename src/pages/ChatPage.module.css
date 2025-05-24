@@ -1,0 +1,300 @@
+/* ChatPage.module.css */
+.chatPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-background); /* Use theme variable */
+  color: var(--color-text); /* Use theme variable */
+}
+
+.mainContainer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px;
+  overflow-y: hidden;
+  background-color: var(--color-background); /* Use theme variable */
+}
+
+.messageList {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.messageBubble {
+  padding: 12px 18px;
+  border-radius: 16px;
+  max-width: 70%;
+  word-wrap: break-word;
+  line-height: 1.6;
+  box-shadow: var(--shadow-sm, 0 2px 5px rgba(0,0,0,0.1)); /* Use theme shadow or a generic one */
+  position: relative;
+}
+
+.userMessage {
+  background-color: var(--color-primary); /* Already using theme variable */
+  color: var(--color-text-on-primary); /* Already using theme variable */
+  align-self: flex-end;
+  border-bottom-right-radius: 6px;
+}
+
+.aiMessage {
+  background-color: var(--color-surface-secondary, #f0f0f0); /* Theme variable for AI messages, with a light theme fallback */
+  color: var(--color-text); /* Use theme variable */
+  align-self: flex-start;
+  border-bottom-left-radius: 6px;
+}
+
+.messageSenderInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.senderName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.aiMessage .senderName {
+ color: var(--color-text-secondary); /* Use theme variable */
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.aiMessage .timestamp {
+ color: var(--color-text-secondary); /* Use theme variable */
+}
+
+.messageBubble p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.sqlBlock {
+  position: relative;
+  background-color: var(--color-background-code-block, #1e1e1e); /* Theme variable for SQL block bg, with a dark fallback for contrast in light mode if not well defined */
+  color: var(--color-text-code-block, #d4d4d4); /* Theme variable for SQL block text, with a light fallback */
+  padding: 16px;
+  padding-top: 52px;
+  border-radius: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  font-family: var(--font-family-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace);
+  border: 1px solid var(--color-border); /* Use theme variable */
+}
+
+.sqlBlock pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.sqlBlock code {
+  font-size: 0.9rem;
+}
+
+.sqlActions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  background-color: var(--color-surface-tertiary, #2a2a2a); /* Theme variable for actions bg, with a distinct fallback */
+  padding: 6px 8px;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.sqlActions .sqlActionButton {
+  background-color: transparent;
+  color: var(--color-text-secondary); /* Theme variable */
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  line-height: 1;
+}
+
+.sqlActions .sqlActionButton:hover {
+  background-color: var(--color-button-secondary-hover-bg, #3a3a3a); /* Theme variable */
+  color: var(--color-button-secondary-hover-text, #ffffff); /* Theme variable */
+}
+
+.sqlActions .sqlActionButton:disabled,
+.sqlActions .sqlActionButton:disabled:hover {
+  color: var(--color-button-disabled-text, #6a6a6a); /* Theme variable */
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+.sqlActions .sqlActionButton .icon {
+  font-size: 0.95em;
+  display: inline-block;
+}
+
+.typingIndicator {
+  font-style: italic;
+  color: var(--color-text-secondary); /* Use theme variable */
+  padding: 10px 0;
+  align-self: flex-start;
+  font-size: 0.9rem;
+}
+
+.inputSection {
+  padding: 20px 0px;
+  border-top: 1px solid var(--color-border); /* Use theme variable */
+  background-color: var(--color-background); /* Use theme variable */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inputTextArea {
+  width: 100%;
+  min-height: 80px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border); /* Use theme variable */
+  background-color: var(--color-surface); /* Use theme variable */
+  color: var(--color-text); /* Use theme variable */
+  font-size: 1rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.inputTextArea::placeholder {
+  color: var(--color-text-secondary); /* Use theme variable */
+}
+
+.inputTextArea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-ring, rgba(0, 123, 255, 0.25));
+}
+
+.inputControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.databaseSelector {
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border); /* Use theme variable */
+  background-color: var(--color-surface); /* Use theme variable */
+  color: var(--color-text); /* Use theme variable */
+  font-size: 0.9rem;
+  flex-grow: 1;
+  max-width: 350px;
+  transition: border-color 0.2s ease;
+}
+
+.databaseSelector:hover {
+  border-color: var(--color-border-medium, var(--color-text-secondary)); /* Use theme variable or fallback */
+}
+
+.databaseSelector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.sendButton {
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chatArea {
+    padding: 15px 20px;
+  }
+
+  .messageBubble {
+    max-width: 85%;
+    padding: 10px 15px;
+  }
+
+  .sqlBlock {
+    padding-top: 45px;
+  }
+
+  .inputTextArea {
+    min-height: 70px;
+    padding: 12px 15px;
+  }
+  
+  .inputControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .databaseSelector {
+    max-width: 100%;
+  }
+
+  .sendButton {
+    padding: 12px 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatArea {
+    padding: 10px 15px;
+  }
+  .messageList {
+    gap: 15px;
+  }
+  .messageBubble {
+    font-size: 0.9rem;
+  }
+  .messageBubble p {
+    font-size: 0.9rem;
+  }
+  .sqlBlock code {
+    font-size: 0.85rem;
+  }
+  .sqlActions .sqlActionButton {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
+  .inputTextArea {
+    font-size: 0.95rem;
+  }
+  .databaseSelector {
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+  .sendButton {
+    font-size: 0.9rem !important;
+    padding: 10px 15px !important;
+  }
+}

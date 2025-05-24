@@ -20,6 +20,7 @@ import DatabaseConnectionPage from "./pages/DatabaseConnectionPage";
 import DatabaseDetailsPage from "./pages/DatabaseDetailsPage";
 import GuiBuilderPage from "./pages/GuiBuilderPage";
 import SettingsPage from "./pages/SettingsPage";
+import ChatPage from "./pages/ChatPage";
 
 // Components
 import LoadingSpinner from "./components/shared/LoadingSpinner";
@@ -169,6 +170,14 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/chat/:templateType"
+                element={
+                  <ProtectedRoute>
+                    <ChatPage />
                   </ProtectedRoute>
                 }
               />
