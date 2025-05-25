@@ -4,10 +4,12 @@ import Button from "../components/shared/Button";
 import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
 import Modal from "../components/shared/Modal";
-import useDatabase from "../hooks/useDatabase";
 import { useAuth } from "../contexts/AuthContext";
 import ResultsTable from "../components/playground/ResultsTable";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
+import { DatabaseContext, DatabaseType } from "../contexts/DatabaseContext";
+import useDatabase from "../hooks/useDatabase";
+import { DatabaseConnection } from "../services/databaseService";
 
 // Sample query conditions for the GUI builder
 type ConditionOperator =
@@ -54,8 +56,12 @@ interface TableField {
 
 const GuiBuilderPage: React.FC = () => {
   const { user } = useAuth();
-  const { connections, activeConnection, executeQuery, setActiveConnection } =
-    useDatabase();
+  const { 
+    connections, 
+    activeConnection, 
+    executeQuery, 
+    setActiveConnection: contextSetActiveConnection,
+  } = React.useContext(DatabaseContext);
 
   // UI state
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -110,79 +116,96 @@ const GuiBuilderPage: React.FC = () => {
       rowCount: table.rowCount,
     })) || [];
 
+  const resetQueryState = () => {
+    setSelectedFields([]);
+    setConditions([]);
+    setJoins([]);
+    setSortOrders([]);
+    setLimit(null);
+    // generatedSql will be updated by the useEffect hook watching these states
+  };
+
+  const handleTableSelect = (tableName: string) => {
+    setSelectedTable(tableName);
+    resetQueryState();
+  };
+
+  // Helper to quote identifiers based on database type
+  const quoteIdentifier = (identifier: string): string => {
+    if (!activeConnection) return identifier;
+    switch (activeConnection.type) {
+      case DatabaseType.MYSQL:
+        return "`" + identifier.replace(/`/g, "``") + "`";
+      case DatabaseType.POSTGRESQL:
+      case DatabaseType.SQLITE:
+        return `"${identifier.replace(/"/g, '""""')}"`;
+      default:
+        return identifier;
+    }
+  };
+
   // Helper to generate SQL from current query state
   const generateSql = () => {
-    if (!selectedTable) {
+    if (!selectedTable || !activeConnection) {
       setGeneratedSql("");
       return;
     }
-
+    const q = quoteIdentifier;
     let sql = "SELECT ";
-
-    // Selected fields
     if (selectedFields.length === 0) {
       sql += "* ";
     } else {
       sql += selectedFields
-        .map((field) => `${field.table}.${field.name}`)
+        .map((field) => `${q(field.table)}.${q(field.name)}`)
         .join(", ");
       sql += " ";
     }
-
-    // FROM clause
-    sql += `\nFROM ${selectedTable} `;
-
-    // JOIN clauses
+    sql += `FROM ${q(selectedTable)} `;
     if (joins.length > 0) {
       joins.forEach((join) => {
-        sql += `\n${join.type} ${join.rightTable} ON ${join.leftTable}.${join.leftField} = ${join.rightTable}.${join.rightField} `;
+        sql += `${join.type} ${q(join.rightTable)} ON ${q(join.leftTable)}.${q(join.leftField)} = ${q(join.rightTable)}.${q(join.rightField)} `;
       });
     }
-
-    // WHERE clause
     if (conditions.length > 0) {
-      sql += "\nWHERE ";
+      sql += "WHERE ";
       conditions.forEach((condition, index) => {
         if (index > 0) {
-          sql += ` ${condition.conjunction} `;
+          sql += `${condition.conjunction} `;
         }
+        const fieldNameParts = condition.field.split('.');
+        const fieldTable = fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
+        const fieldCol = fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
+        const fieldIdentifier = `${q(fieldTable)}.${q(fieldCol)}`;
 
-        // Handle IS NULL and IS NOT NULL differently
-        if (
-          condition.operator === "IS NULL" ||
-          condition.operator === "IS NOT NULL"
-        ) {
-          sql += `${condition.field} ${condition.operator}`;
+        if (condition.operator === "IS NULL" || condition.operator === "IS NOT NULL") {
+          sql += `${fieldIdentifier} ${condition.operator}`;
         } else if (condition.operator === "IN") {
-          // Split comma-separated values for IN operator
-          const values = condition.value.split(",").map((v) => v.trim());
-          sql += `${condition.field} IN (${values
-            .map((v) => `'${v}'`)
-            .join(", ")})`;
+          const values = condition.value.split(",").map((v) => `\'${v.trim().replace(/\'/g, "\'\'\'\'")}\'`);
+          sql += `${fieldIdentifier} IN (${values.join(", ")})`;
         } else if (condition.operator === "LIKE") {
-          sql += `${condition.field} LIKE '%${condition.value}%'`;
+          sql += `${fieldIdentifier} LIKE \'%${condition.value.replace(/\'/g, "\'\'\'\'")}%\'`;
         } else {
-          sql += `${condition.field} ${condition.operator} '${condition.value}'`;
+          sql += `${fieldIdentifier} ${condition.operator} \'${condition.value.replace(/\'/g, "\'\'\'\'")}\'`;
         }
       });
     }
-
-    // ORDER BY clause
     if (sortOrders.length > 0) {
-      sql += "\nORDER BY ";
+      sql += "ORDER BY ";
       sql += sortOrders
-        .map((sort) => `${sort.field} ${sort.direction}`)
+        .map((sort) => {
+          const fieldNameParts = sort.field.split('.');
+          const fieldTable = fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
+          const fieldCol = fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
+          return `${q(fieldTable)}.${q(fieldCol)} ${sort.direction}`;
+        })
         .join(", ");
     }
-
-    // LIMIT clause
     if (limit !== null) {
-      sql += `\nLIMIT ${limit}`;
+      sql += `LIMIT ${limit}`;
     }
-
     sql += ";";
-
-    setGeneratedSql(sql);
+    const finalSql = sql.replace(/\\n/g, " ").replace(/\s+/g, " ").trim();
+    setGeneratedSql(finalSql);
   };
 
   // Effect to regenerate SQL whenever query parts change
@@ -304,15 +327,18 @@ const GuiBuilderPage: React.FC = () => {
       setError("No SQL query to execute");
       return;
     }
-
+    if (!activeConnection) {
+      setError("No active database connection for query execution.");
+      return;
+    }
     setIsExecuting(true);
     setError(null);
-
+    // Clear previous results before new execution
+    setResults(null); 
     try {
       const startTime = performance.now();
       const result = await executeQuery(generatedSql);
       const endTime = performance.now();
-
       setResults(result.data);
       setExecutionTime(endTime - startTime);
     } catch (err) {
@@ -320,6 +346,99 @@ const GuiBuilderPage: React.FC = () => {
       setResults(null);
     } finally {
       setIsExecuting(false);
+    }
+  };
+
+  const downloadFile = (content: string, fileName: string, contentType: string) => {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    document.body.appendChild(a); // Required for Firefox
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  };
+
+  const exportToJson = (data: any[], fileName: string) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    downloadFile(jsonString, fileName, "application/json");
+  };
+
+  const escapeCsvCell = (cellData: any): string => {
+    if (cellData === null || cellData === undefined) {
+      return "";
+    }
+    const stringValue = String(cellData);
+    // If the string contains a comma, double quote, or newline, wrap it in double quotes
+    // and escape any existing double quotes by doubling them up.
+    if (stringValue.includes(",") || stringValue.includes('\'\'') || stringValue.includes("\n") || stringValue.includes("\r")) {
+      return `"${stringValue.replace(/"/g, '\'\'\'\'')}"`;
+    }
+    return stringValue;
+  };
+
+  const exportToCsv = (data: any[], fileName: string) => {
+    if (!data || data.length === 0) return;
+    const headers = Object.keys(data[0]);
+    const csvRows = [
+      headers.join(","), // header row
+      ...data.map(row => headers.map(fieldName => escapeCsvCell(row[fieldName])).join(","))
+    ];
+    const csvString = csvRows.join("\r\n");
+    downloadFile(csvString, fileName, "text/csv;charset=utf-8;");
+  };
+
+  const escapeXmlValue = (value: any): string => {
+    if (value === null || value === undefined) return "";
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  };
+
+  const exportToXml = (data: any[], fileName: string) => {
+    if (!data || data.length === 0) return;
+    let xmlString = '<?xml version="1.0" encoding="UTF-8"?>\n<results>\n';
+    const headers = Object.keys(data[0]);
+    data.forEach(row => {
+      xmlString += '  <item>\n';
+      headers.forEach(header => {
+        const tagName = header.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^[^a-zA-Z_]+/, '_');
+        xmlString += `    <${tagName}>${escapeXmlValue(row[header])}</${tagName}>\n`;
+      });
+      xmlString += '  </item>\n';
+    });
+    xmlString += '</results>';
+    downloadFile(xmlString, fileName, "application/xml");
+  };
+
+
+  const handleExportData = (format: "json" | "csv" | "xml") => {
+    if (!results || results.length === 0) {
+      setError("No data to export.");
+      return;
+    }
+
+    // Corrected timestamp generation
+    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-'); 
+    const baseFilename = `query_results_${timestamp}`;
+
+    switch (format) {
+      case "json":
+        exportToJson(results, `${baseFilename}.json`);
+        break;
+      case "csv":
+        exportToCsv(results, `${baseFilename}.csv`);
+        break;
+      case "xml":
+        exportToXml(results, `${baseFilename}.xml`);
+        break;
+      default:
+        console.error("Unsupported export format:", format);
+        setError("Unsupported export format.");
     }
   };
 
@@ -346,7 +465,7 @@ const GuiBuilderPage: React.FC = () => {
   return (
     <div className={styles.guiBuilderPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={user ? { name: user.name, avatarUrl: user.avatarUrl || undefined } : undefined}
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         onDatabaseConnect={() => setIsConnectModalOpen(true)}
@@ -365,7 +484,10 @@ const GuiBuilderPage: React.FC = () => {
             }))}
             onPlaygroundClick={() => {}}
             onCreatePlayground={() => {}}
-            onDatabaseClick={(id) => setActiveConnection(id)}
+            onDatabaseClick={(id) => {
+              const connToActivate = connections.find(c => c.id === id);
+              contextSetActiveConnection(connToActivate || null);
+            }}
             onConnectDatabase={() => setIsConnectModalOpen(true)}
             onCollapse={() => setIsSidebarVisible(false)}
           />
@@ -400,7 +522,7 @@ const GuiBuilderPage: React.FC = () => {
                       className={`${styles.tableCard} ${
                         selectedTable === table.name ? styles.selectedTable : ""
                       }`}
-                      onClick={() => setSelectedTable(table.name)}
+                      onClick={() => handleTableSelect(table.name)}
                     >
                       <div className={styles.tableIcon}>📊</div>
                       <div className={styles.tableDetails}>
@@ -867,11 +989,11 @@ const GuiBuilderPage: React.FC = () => {
                     <ResultsTable
                       data={results}
                       isLoading={false}
-                      executionTime={executionTime}
-                      onExportData={() => {}}
+                      error={error}
+                      onExportData={handleExportData}
                     />
                   </div>
-                ) : error ? (
+                ) : error && !isExecuting ? (
                   <div className={styles.errorContainer}>
                     <h2>Error</h2>
                     <div className={styles.errorMessage}>{error}</div>

@@ -137,15 +137,21 @@ class DatabaseService {
     query: string
   ): Promise<QueryResult> {
     try {
-      const response = await api.post<{ query: any }>('queries/execute', {
+      // The backend route 'database/execute' responds with: 
+      // { success: boolean, data: { result: { rows: any[], rowCount: number, executionTime: number, columns?: string[] } } }
+      // The api.post<T> method returns the `data` part of the axios response.
+      const backendResponse = await api.post<{ success: boolean, data: { result: { rows: any[], rowCount: number, executionTime: number, columns?: string[] } } }>('database/execute', {
         connectionId,
         sqlQuery: query,
       });
       
+      // Ensure we correctly access the nested result object
+      const actualResult = backendResponse.data.result;
+
       return {
-        data: response.query.result?.rows || [],
-        rowCount: response.query.result?.rowCount || 0,
-        executionTime: response.query.executionTime || 0,
+        data: actualResult?.rows || [],
+        rowCount: actualResult?.rowCount || 0,
+        executionTime: actualResult?.executionTime || 0,
       };
     } catch (error) {
       if (error instanceof Error) {
