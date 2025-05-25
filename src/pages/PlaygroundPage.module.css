@@ -272,7 +272,7 @@
 }
 
 .messageBox {
-  padding: 16px 20px;
+  padding: 10px 20px;
   border-radius: 12px;
   max-width: 85%;
   word-wrap: break-word;
@@ -757,6 +757,7 @@
   border-top: 1px solid var(--color-border);
   background-color: var(--color-background-secondary, var(--color-surface));
   margin-top: auto;
+  z-index: 100;
 }
 
 .inputWrapper {

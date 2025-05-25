@@ -241,14 +241,14 @@ const ChatPage: React.FC = () => {
                   message.sender === 'user' ? styles.userMessage : styles.aiMessage
                 }`}
               >
-                <div className={styles.messageSenderInfo}>
+                {/* <div className={styles.messageSenderInfo}>
                   <span className={styles.senderName}>
                     {message.sender === 'user' ? 'You' : 'AI Assistant'}
                   </span>
                   <span className={styles.timestamp}>
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </span>
-                </div>
+                </div> */}
                 <p>{message.text}</p>
                 {message.sql && renderSqlBlock(message.sql)}
               </div>
