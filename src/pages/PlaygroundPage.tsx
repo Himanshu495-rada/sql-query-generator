@@ -4,6 +4,7 @@ import styles from "./PlaygroundPage.module.css";
 import Navbar from "../components/shared/Navbar";
 import Sidebar from "../components/shared/Sidebar";
 import DatabaseExplorer from "../components/playground/DatabaseExplorer";
+import ResultsTable from "../components/playground/ResultsTable";
 import Button from "../components/shared/Button";
 import Modal, { ModalFooter } from "../components/shared/Modal";
 import { useAuth } from "../contexts/AuthContext";
@@ -11,11 +12,8 @@ import { useDatabase } from "../contexts/DatabaseContext";
 import usePlayground from "../hooks/usePlayground";
 import { formatSql } from "../utils/sqlFormatter";
 import playgroundService from "../services/playgroundService";
-import queryService, {
-  GenerateQueryPayload,
-  ParsedSqlData,
-} from "../services/queryService";
-import { FiCopy, FiPlay, FiMaximize2 } from "react-icons/fi";
+import queryService, { GenerateQueryPayload } from "../services/queryService";
+import { FiCopy, FiPlay } from "react-icons/fi";
 import {
   chatMessageService,
   ChatMessage as ApiChatMessage,
@@ -126,11 +124,6 @@ const PlaygroundPage: React.FC = () => {
       description: "Low inventory alert",
     },
   ];
-
-  // New state for expanded result
-  const [expandedResult, setExpandedResult] = useState<any[] | null>(null);
-  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-
   // Effect to create a new playground if no ID is provided
   useEffect(() => {
     if (!id && !playground) {
@@ -806,7 +799,6 @@ const PlaygroundPage: React.FC = () => {
                     }`}
                   >
                     <div>{message.message}</div>
-
                     {message.sql && (
                       <div className={styles.queryBox}>
                         <div className={styles.queryHeader}>
@@ -831,72 +823,19 @@ const PlaygroundPage: React.FC = () => {
                         </div>
                         <pre className={styles.queryContent}>{message.sql}</pre>
                       </div>
-                    )}
-
+                    )}{" "}
                     {message.results &&
                       Array.isArray(message.results) &&
                       message.results.length > 0 && (
                         <div className={styles.resultsBox}>
-                          <div className={styles.resultsHeader}>
-                            <span>Results ({message.results.length} rows)</span>
-                            <div className={styles.resultsActions}>
-                              <Button
-                                size="small"
-                                onClick={() => {
-                                  setExpandedResult(message.results || []);
-                                  setIsResultModalOpen(true);
-                                }}
-                              >
-                                <FiMaximize2 className={styles.icon} /> Expand
-                              </Button>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  handleExportData("json", message.results)
-                                }
-                              >
-                                Export JSON
-                              </Button>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  handleExportData("csv", message.results)
-                                }
-                              >
-                                Export CSV
-                              </Button>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  handleExportData("xml", message.results)
-                                }
-                              >
-                                Export XML
-                              </Button>
-                            </div>
-                          </div>
-                          <div className={styles.resultsTableWrapper}>
-                            <table className={styles.resultsTable}>
-                              <thead>
-                                <tr>
-                                  {Object.keys(message.results[0]).map(
-                                    (col) => (
-                                      <th key={col}>{col}</th>
-                                    )
-                                  )}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {message.results.map((row, i) => (
-                                  <tr key={i}>
-                                    {Object.values(row).map((val, j) => (
-                                      <td key={j}>{String(val)}</td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                          <ResultsTable
+                            data={message.results}
+                            isLoading={false}
+                            error={null}
+                            onExportData={(format) =>
+                              handleExportData(format, message.results)
+                            }
+                          />
                         </div>
                       )}
                   </div>
@@ -966,59 +905,7 @@ const PlaygroundPage: React.FC = () => {
           <p>
             This action cannot be undone. All queries and history will be lost.
           </p>
-        </div>
-      </Modal>
-
-      {/* Modal for expanded results */}
-      <Modal
-        isOpen={isResultModalOpen}
-        onClose={() => setIsResultModalOpen(false)}
-        title="Query Results"
-        size="large"
-      >
-        {expandedResult && expandedResult.length > 0 ? (
-          <div className={styles.resultsTableWrapper}>
-            <table className={styles.resultsTable}>
-              <thead>
-                <tr>
-                  {Object.keys(expandedResult[0]).map((col) => (
-                    <th key={col}>{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {expandedResult.map((row, i) => (
-                  <tr key={i}>
-                    {Object.values(row).map((val, j) => (
-                      <td key={j}>{String(val)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div>No results to display.</div>
-        )}
-        <div className={styles.resultsModalActions}>
-          <Button
-            onClick={() =>
-              handleExportData("json", expandedResult || undefined)
-            }
-          >
-            Export JSON
-          </Button>
-          <Button
-            onClick={() => handleExportData("csv", expandedResult || undefined)}
-          >
-            Export CSV
-          </Button>
-          <Button
-            onClick={() => handleExportData("xml", expandedResult || undefined)}
-          >
-            Export XML
-          </Button>
-        </div>
+        </div>{" "}
       </Modal>
     </div>
   );

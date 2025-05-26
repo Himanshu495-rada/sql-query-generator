@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styles from "./GuiBuilderPage.module.css";
 import Button from "../components/shared/Button";
 import Navbar from "../components/shared/Navbar";
@@ -8,8 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import ResultsTable from "../components/playground/ResultsTable";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import { DatabaseContext, DatabaseType } from "../contexts/DatabaseContext";
-import useDatabase from "../hooks/useDatabase";
-import { DatabaseConnection } from "../services/databaseService";
+import guiBuilderService from "../services/guiBuilderService";
 
 // Sample query conditions for the GUI builder
 type ConditionOperator =
@@ -56,22 +55,22 @@ interface TableField {
 
 const GuiBuilderPage: React.FC = () => {
   const { user } = useAuth();
-  const { 
-    connections, 
-    activeConnection, 
-    executeQuery, 
+  const {
+    connections,
+    activeConnection,
     setActiveConnection: contextSetActiveConnection,
+    loadConnections,
+    refreshSchema,
   } = React.useContext(DatabaseContext);
 
   // UI state
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [results, setResults] = useState<any[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [executionTime, setExecutionTime] = useState<number | undefined>(
-    undefined
+  const [results, setResults] = useState<Record<string, unknown>[] | null>(
+    null
   );
+  const [error, setError] = useState<string | null>(null);
 
   // Query builder state
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
@@ -81,9 +80,19 @@ const GuiBuilderPage: React.FC = () => {
   const [sortOrders, setSortOrders] = useState<SortOrder[]>([]);
   const [limit, setLimit] = useState<number | null>(null);
   const [generatedSql, setGeneratedSql] = useState<string>("");
-
   // Get table fields once a table is selected
   const [availableFields, setAvailableFields] = useState<TableField[]>([]);
+  // State for real playgrounds data
+  interface PlaygroundData {
+    id: string;
+    name: string;
+    lastUpdated: Date;
+    isActive: boolean;
+  }
+
+  const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundData[]>(
+    []
+  );
 
   // Effect to update available fields when a table is selected
   useEffect(() => {
@@ -107,6 +116,73 @@ const GuiBuilderPage: React.FC = () => {
       setAvailableFields([]);
     }
   }, [selectedTable, activeConnection]);
+  // Auto-select first connection if no active connection is set
+  useEffect(() => {
+    if (connections && connections.length > 0 && !activeConnection) {
+      contextSetActiveConnection(connections[0]);
+    }
+  }, [connections, activeConnection, contextSetActiveConnection]);
+
+  // Load connections and playgrounds on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load connections first
+        await loadConnections();
+
+        // Load real playgrounds from API
+        const { default: playgroundService } = await import(
+          "../services/playgroundService"
+        );
+        const playgrounds = await playgroundService.getPlaygrounds();
+        if (playgrounds && Array.isArray(playgrounds)) {
+          const formattedPlaygrounds = playgrounds.map(
+            (pg: {
+              id: string;
+              name?: string;
+              updatedAt?: string;
+              createdAt?: string;
+            }) => ({
+              id: pg.id,
+              name: pg.name || "Unnamed Playground",
+              lastUpdated: new Date(pg.updatedAt || pg.createdAt || Date.now()),
+              isActive: false,
+            })
+          );
+          setRecentPlaygrounds(formattedPlaygrounds);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        // Set empty array as fallback
+        setRecentPlaygrounds([]);
+      }
+    };
+
+    loadData();
+  }, [loadConnections]);
+
+  // Effect to load schema when active connection changes
+  useEffect(() => {
+    const loadSchema = async () => {
+      if (
+        activeConnection &&
+        (!activeConnection.schema ||
+          Object.keys(activeConnection.schema).length === 0)
+      ) {
+        console.log("Loading schema for connection:", activeConnection);
+        try {
+          await refreshSchema();
+          console.log("Schema loaded successfully:", activeConnection.schema);
+        } catch (error) {
+          console.error("Error loading schema:", error);
+        }
+      } else if (activeConnection?.schema) {
+        console.log("Using existing schema:", activeConnection.schema);
+      }
+    };
+
+    loadSchema();
+  }, [activeConnection, refreshSchema]);
 
   // Get all available tables from the active connection
   const availableTables =
@@ -143,9 +219,8 @@ const GuiBuilderPage: React.FC = () => {
         return identifier;
     }
   };
-
   // Helper to generate SQL from current query state
-  const generateSql = () => {
+  const generateSql = useCallback(() => {
     if (!selectedTable || !activeConnection) {
       setGeneratedSql("");
       return;
@@ -163,7 +238,9 @@ const GuiBuilderPage: React.FC = () => {
     sql += `FROM ${q(selectedTable)} `;
     if (joins.length > 0) {
       joins.forEach((join) => {
-        sql += `${join.type} ${q(join.rightTable)} ON ${q(join.leftTable)}.${q(join.leftField)} = ${q(join.rightTable)}.${q(join.rightField)} `;
+        sql += `${join.type} ${q(join.rightTable)} ON ${q(join.leftTable)}.${q(
+          join.leftField
+        )} = ${q(join.rightTable)}.${q(join.rightField)} `;
       });
     }
     if (conditions.length > 0) {
@@ -172,20 +249,32 @@ const GuiBuilderPage: React.FC = () => {
         if (index > 0) {
           sql += `${condition.conjunction} `;
         }
-        const fieldNameParts = condition.field.split('.');
-        const fieldTable = fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
-        const fieldCol = fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
+        const fieldNameParts = condition.field.split(".");
+        const fieldTable =
+          fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
+        const fieldCol =
+          fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
         const fieldIdentifier = `${q(fieldTable)}.${q(fieldCol)}`;
 
-        if (condition.operator === "IS NULL" || condition.operator === "IS NOT NULL") {
+        if (
+          condition.operator === "IS NULL" ||
+          condition.operator === "IS NOT NULL"
+        ) {
           sql += `${fieldIdentifier} ${condition.operator}`;
         } else if (condition.operator === "IN") {
-          const values = condition.value.split(",").map((v) => `\'${v.trim().replace(/\'/g, "\'\'\'\'")}\'`);
+          const values = condition.value
+            .split(",")
+            .map((v) => `'${v.trim().replace(/'/g, "''")}'`);
           sql += `${fieldIdentifier} IN (${values.join(", ")})`;
         } else if (condition.operator === "LIKE") {
-          sql += `${fieldIdentifier} LIKE \'%${condition.value.replace(/\'/g, "\'\'\'\'")}%\'`;
+          sql += `${fieldIdentifier} LIKE '%${condition.value.replace(
+            /'/g,
+            "''"
+          )}%'`;
         } else {
-          sql += `${fieldIdentifier} ${condition.operator} \'${condition.value.replace(/\'/g, "\'\'\'\'")}\'`;
+          sql += `${fieldIdentifier} ${
+            condition.operator
+          } '${condition.value.replace(/'/g, "''")}'`;
         }
       });
     }
@@ -193,9 +282,11 @@ const GuiBuilderPage: React.FC = () => {
       sql += "ORDER BY ";
       sql += sortOrders
         .map((sort) => {
-          const fieldNameParts = sort.field.split('.');
-          const fieldTable = fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
-          const fieldCol = fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
+          const fieldNameParts = sort.field.split(".");
+          const fieldTable =
+            fieldNameParts.length > 1 ? fieldNameParts[0] : selectedTable;
+          const fieldCol =
+            fieldNameParts.length > 1 ? fieldNameParts[1] : fieldNameParts[0];
           return `${q(fieldTable)}.${q(fieldCol)} ${sort.direction}`;
         })
         .join(", ");
@@ -206,12 +297,20 @@ const GuiBuilderPage: React.FC = () => {
     sql += ";";
     const finalSql = sql.replace(/\\n/g, " ").replace(/\s+/g, " ").trim();
     setGeneratedSql(finalSql);
-  };
-
+  }, [
+    selectedTable,
+    activeConnection,
+    selectedFields,
+    conditions,
+    joins,
+    sortOrders,
+    limit,
+    quoteIdentifier,
+  ]);
   // Effect to regenerate SQL whenever query parts change
   useEffect(() => {
     generateSql();
-  }, [selectedTable, selectedFields, conditions, joins, sortOrders, limit]);
+  }, [generateSql]);
 
   // Add a new condition
   const handleAddCondition = () => {
@@ -319,9 +418,7 @@ const GuiBuilderPage: React.FC = () => {
   // Deselect all fields
   const handleDeselectAllFields = () => {
     setSelectedFields([]);
-  };
-
-  // Execute the generated query
+  }; // Execute the generated query
   const handleExecuteQuery = async () => {
     if (!generatedSql.trim()) {
       setError("No SQL query to execute");
@@ -334,13 +431,17 @@ const GuiBuilderPage: React.FC = () => {
     setIsExecuting(true);
     setError(null);
     // Clear previous results before new execution
-    setResults(null); 
+    setResults(null);
     try {
-      const startTime = performance.now();
-      const result = await executeQuery(generatedSql);
-      const endTime = performance.now();
-      setResults(result.data);
-      setExecutionTime(endTime - startTime);
+      const result = await guiBuilderService.executeQuery({
+        connectionId: activeConnection.id,
+        sqlQuery: generatedSql,
+      }); // Convert {columns, rows} format to array of objects format for ResultsTable
+      const { rows } = result.data;
+      // Note: rows is already an array of objects from the API response
+      const formattedResults: Record<string, unknown>[] = rows;
+
+      setResults(formattedResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to execute query");
       setResults(null);
@@ -349,7 +450,11 @@ const GuiBuilderPage: React.FC = () => {
     }
   };
 
-  const downloadFile = (content: string, fileName: string, contentType: string) => {
+  const downloadFile = (
+    content: string,
+    fileName: string,
+    contentType: string
+  ) => {
     const a = document.createElement("a");
     const file = new Blob([content], { type: contentType });
     a.href = URL.createObjectURL(file);
@@ -359,37 +464,43 @@ const GuiBuilderPage: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
   };
-
-  const exportToJson = (data: any[], fileName: string) => {
+  const exportToJson = (data: Record<string, unknown>[], fileName: string) => {
     const jsonString = JSON.stringify(data, null, 2);
     downloadFile(jsonString, fileName, "application/json");
   };
 
-  const escapeCsvCell = (cellData: any): string => {
+  const escapeCsvCell = (cellData: unknown): string => {
     if (cellData === null || cellData === undefined) {
       return "";
     }
     const stringValue = String(cellData);
     // If the string contains a comma, double quote, or newline, wrap it in double quotes
     // and escape any existing double quotes by doubling them up.
-    if (stringValue.includes(",") || stringValue.includes('\'\'') || stringValue.includes("\n") || stringValue.includes("\r")) {
-      return `"${stringValue.replace(/"/g, '\'\'\'\'')}"`;
+    if (
+      stringValue.includes(",") ||
+      stringValue.includes('"') ||
+      stringValue.includes("\n") ||
+      stringValue.includes("\r")
+    ) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
     }
     return stringValue;
   };
 
-  const exportToCsv = (data: any[], fileName: string) => {
+  const exportToCsv = (data: Record<string, unknown>[], fileName: string) => {
     if (!data || data.length === 0) return;
     const headers = Object.keys(data[0]);
     const csvRows = [
       headers.join(","), // header row
-      ...data.map(row => headers.map(fieldName => escapeCsvCell(row[fieldName])).join(","))
+      ...data.map((row) =>
+        headers.map((fieldName) => escapeCsvCell(row[fieldName])).join(",")
+      ),
     ];
     const csvString = csvRows.join("\r\n");
     downloadFile(csvString, fileName, "text/csv;charset=utf-8;");
   };
 
-  const escapeXmlValue = (value: any): string => {
+  const escapeXmlValue = (value: unknown): string => {
     if (value === null || value === undefined) return "";
     return String(value)
       .replace(/&/g, "&amp;")
@@ -398,23 +509,25 @@ const GuiBuilderPage: React.FC = () => {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
   };
-
-  const exportToXml = (data: any[], fileName: string) => {
+  const exportToXml = (data: Record<string, unknown>[], fileName: string) => {
     if (!data || data.length === 0) return;
     let xmlString = '<?xml version="1.0" encoding="UTF-8"?>\n<results>\n';
     const headers = Object.keys(data[0]);
-    data.forEach(row => {
-      xmlString += '  <item>\n';
-      headers.forEach(header => {
-        const tagName = header.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^[^a-zA-Z_]+/, '_');
-        xmlString += `    <${tagName}>${escapeXmlValue(row[header])}</${tagName}>\n`;
+    data.forEach((row) => {
+      xmlString += "  <item>\n";
+      headers.forEach((header) => {
+        const tagName = header
+          .replace(/[^a-zA-Z0-9_]/g, "_")
+          .replace(/^[^a-zA-Z_]+/, "_");
+        xmlString += `    <${tagName}>${escapeXmlValue(
+          row[header]
+        )}</${tagName}>\n`;
       });
-      xmlString += '  </item>\n';
+      xmlString += "  </item>\n";
     });
-    xmlString += '</results>';
+    xmlString += "</results>";
     downloadFile(xmlString, fileName, "application/xml");
   };
-
 
   const handleExportData = (format: "json" | "csv" | "xml") => {
     if (!results || results.length === 0) {
@@ -423,7 +536,10 @@ const GuiBuilderPage: React.FC = () => {
     }
 
     // Corrected timestamp generation
-    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-'); 
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/:/g, "-")
+      .replace(/\./g, "-");
     const baseFilename = `query_results_${timestamp}`;
 
     switch (format) {
@@ -441,31 +557,25 @@ const GuiBuilderPage: React.FC = () => {
         setError("Unsupported export format.");
     }
   };
+  // Playground click handlers
+  const handlePlaygroundClick = (playgroundId: string) => {
+    // Navigate to the selected playground
+    window.location.href = `/playground/${playgroundId}`;
+  };
 
-  // Sample playground data for the sidebar
-  const samplePlaygrounds = [
-    {
-      id: "pg1",
-      name: "Sales Analysis",
-      lastUpdated: new Date(),
-      isActive: true,
-    },
-    {
-      id: "pg2",
-      name: "User Demographics",
-      lastUpdated: new Date(Date.now() - 86400000),
-    },
-    {
-      id: "pg3",
-      name: "Inventory Report",
-      lastUpdated: new Date(Date.now() - 172800000),
-    },
-  ];
+  const handleCreatePlayground = () => {
+    // Navigate to create new playground
+    window.location.href = "/playground";
+  };
 
   return (
     <div className={styles.guiBuilderPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl || undefined } : undefined}
+        user={
+          user
+            ? { name: user.name, avatarUrl: user.avatarUrl || undefined }
+            : undefined
+        }
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         onDatabaseConnect={() => setIsConnectModalOpen(true)}
@@ -473,40 +583,79 @@ const GuiBuilderPage: React.FC = () => {
       />
 
       <div className={styles.mainContainer}>
+        {" "}
         {isSidebarVisible && (
           <Sidebar
             isVisible={isSidebarVisible}
-            playgrounds={samplePlaygrounds}
+            playgrounds={recentPlaygrounds.map((pg) => ({
+              id: pg.id,
+              name: pg.name,
+              lastUpdated: pg.lastUpdated,
+              isActive: false, // No active playground in gui builder
+            }))}
             databases={connections.map((conn) => ({
               id: conn.id,
               name: conn.name,
               status: conn.status,
             }))}
-            onPlaygroundClick={() => {}}
-            onCreatePlayground={() => {}}
+            onPlaygroundClick={handlePlaygroundClick}
+            onCreatePlayground={handleCreatePlayground}
             onDatabaseClick={(id) => {
-              const connToActivate = connections.find(c => c.id === id);
+              const connToActivate = connections.find((c) => c.id === id);
               contextSetActiveConnection(connToActivate || null);
             }}
             onConnectDatabase={() => setIsConnectModalOpen(true)}
             onCollapse={() => setIsSidebarVisible(false)}
           />
-        )}
-
+        )}{" "}
         <div className={styles.content}>
           <div className={styles.builderHeader}>
-            <h1>Visual Query Builder</h1>
-            <p>
-              Build SQL queries using a visual interface instead of writing
-              code.
-            </p>
+            <div className={styles.headerContent}>
+              <div className={styles.headerText}>
+                <h1>Visual Query Builder</h1>
+                <p>
+                  Build SQL queries using a visual interface instead of writing
+                  code.
+                </p>
+              </div>
+              {connections.length > 0 && (
+                <div className={styles.databaseSelector}>
+                  <label
+                    htmlFor="database-select"
+                    className={styles.selectorLabel}
+                  >
+                    Active Database:
+                  </label>
+                  <select
+                    id="database-select"
+                    className={styles.databaseSelect}
+                    value={activeConnection?.id || ""}
+                    onChange={(e) => {
+                      const selectedConnection = connections.find(
+                        (conn) => conn.id === e.target.value
+                      );
+                      contextSetActiveConnection(selectedConnection || null);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select a database
+                    </option>
+                    {connections.map((connection) => (
+                      <option key={connection.id} value={connection.id}>
+                        {connection.name} ({connection.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           {!activeConnection ? (
             <div className={styles.noConnectionMessage}>
               <div className={styles.noConnectionIcon}>🔌</div>
               <h2>No Database Connected</h2>
-              <p>Connect to a database to start building queries</p>
+              <p>Connect to a database to start building queries</p>{" "}
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Database
               </Button>
@@ -535,7 +684,6 @@ const GuiBuilderPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-
               {selectedTable && (
                 <>
                   <div className={styles.fieldSelection}>
@@ -975,17 +1123,18 @@ const GuiBuilderPage: React.FC = () => {
                     </div>
                   </div>
                 </>
-              )}
-
+              )}{" "}
               {/* Results Section */}
               <div className={styles.resultsSection}>
                 {isExecuting ? (
                   <div className={styles.loadingContainer}>
                     <LoadingSpinner size="large" text="Executing query..." />
                   </div>
-                ) : results ? (
+                ) : results && results.length > 0 ? (
                   <div className={styles.queryResults}>
-                    <h2>Query Results</h2>
+                    <div className={styles.resultsHeader}>
+                      <span>Results ({results.length} rows)</span>
+                    </div>
                     <ResultsTable
                       data={results}
                       isLoading={false}

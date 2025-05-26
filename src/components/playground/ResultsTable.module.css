@@ -19,7 +19,7 @@
 
 .resultCount {
   font-size: 14px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -38,19 +38,19 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: var(--color-text-secondary);
   transition: all 0.2s;
 }
 
 .expandButton:hover {
-  background-color: #f1f5f9;
-  color: #3498db;
+  background-color: var(--color-surface-secondary);
+  color: var(--color-primary);
 }
 
 .tableWrapper {
   flex: 1;
   overflow: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
 }
 
@@ -58,19 +58,21 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .resultsTable th,
 .resultsTable td {
   padding: 10px 16px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .resultsTable th {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-secondary);
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -81,34 +83,36 @@
 }
 
 .resultsTable tr:hover {
-  background-color: #f1f5f9;
+  background-color: var(--color-surface-secondary);
 }
 
 .filterRow {
-  background-color: #f8fafc !important;
+  background-color: var(--color-surface-secondary) !important;
 }
 
 .filterRow th {
   padding: 6px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 
 .filterInput {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 12px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .filterInput:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .nullValue {
-  color: #9ca3af;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -118,7 +122,7 @@
   align-items: center;
   padding: 12px 0 0 0;
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
 }
 
 .paginationControls {
@@ -129,9 +133,10 @@
 
 .paginationControls select {
   padding: 4px 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .pageNavigation {
@@ -156,17 +161,18 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: var(--color-text-secondary);
   font-size: 14px;
+  transition: all 0.2s;
 }
 
 .pageButton:hover:not(:disabled) {
-  background-color: #f1f5f9;
-  color: #3498db;
+  background-color: var(--color-surface-secondary);
+  color: var(--color-primary);
 }
 
 .pageButton:disabled {
-  color: #cbd5e0;
+  color: var(--color-border);
   cursor: not-allowed;
 }
 
@@ -177,15 +183,15 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #64748b;
+  color: var(--color-text-secondary);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(52, 152, 219, 0.3);
+  border: 3px solid var(--color-border);
   border-radius: 50%;
-  border-top-color: #3498db;
+  border-top-color: var(--color-primary);
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
 }
@@ -203,7 +209,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #e53e3e;
+  color: var(--color-danger);
   text-align: center;
   padding: 0 24px;
 }
@@ -214,7 +220,7 @@
 }
 
 .errorMessage {
-  color: #718096;
+  color: var(--color-text-secondary);
   margin-top: 8px;
   font-size: 14px;
   max-width: 500px;
@@ -227,18 +233,18 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #64748b;
+  color: var(--color-text-secondary);
   text-align: center;
 }
 
 .emptyIcon {
   font-size: 32px;
   margin-bottom: 16px;
-  color: #cbd5e0;
+  color: var(--color-border);
 }
 
 .emptyDescription {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 

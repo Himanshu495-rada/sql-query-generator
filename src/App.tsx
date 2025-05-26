@@ -21,6 +21,7 @@ import DatabaseDetailsPage from "./pages/DatabaseDetailsPage";
 import GuiBuilderPage from "./pages/GuiBuilderPage";
 import SettingsPage from "./pages/SettingsPage";
 import ChatPage from "./pages/ChatPage";
+import DocumentationPage from "./pages/DocumentationPage";
 
 // Components
 import LoadingSpinner from "./components/shared/LoadingSpinner";
@@ -47,10 +48,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   // Redirect to login if not authenticated, and save the intended destination
   if (!isAuthenticated) {
     return (
-      <Navigate 
-        to="/login" 
-        state={{ from: location.pathname + location.search }} 
-        replace 
+      <Navigate
+        to="/login"
+        state={{ from: location.pathname + location.search }}
+        replace
       />
     );
   }
@@ -66,7 +67,7 @@ const App: React.FC = () => {
     const initializeAuth = async () => {
       // Record start time to enforce minimum loading time
       const startTime = Date.now();
-      
+
       try {
         if (authService.isAuthenticated()) {
           await authService.getCurrentUser();
@@ -78,7 +79,7 @@ const App: React.FC = () => {
         // Enforce minimum loading time of 1 second
         const elapsedTime = Date.now() - startTime;
         const minLoadingTime = 1000; // 1 second
-        
+
         if (elapsedTime < minLoadingTime) {
           // If loading was too fast, wait for the remaining time
           setTimeout(() => {
@@ -90,7 +91,7 @@ const App: React.FC = () => {
         }
       }
     };
-    
+
     initializeAuth();
   }, []);
 
@@ -170,6 +171,14 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documentation"
+                element={
+                  <ProtectedRoute>
+                    <DocumentationPage />
                   </ProtectedRoute>
                 }
               />

@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import Button from "./Button";
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
-import { FiUser, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
+import {
+  FiUser,
+  FiSettings,
+  FiLogOut,
+  FiChevronDown,
+  FiBook,
+} from "react-icons/fi";
 import ThemeToggle from "./ThemeToggle";
 import authService from "../../services/authService";
 
@@ -148,7 +154,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 New Playground
               </Button>
             )}
-
             {onDatabaseConnect && (
               <Button
                 variant="secondary"
@@ -157,24 +162,34 @@ const Navbar: React.FC<NavbarProps> = ({
               >
                 Connect DB
               </Button>
-            )}
+            )}{" "}
             <Button
               variant="outline"
               size="small"
-              onClick={() => navigate('/gui-builder')}
+              onClick={() => navigate("/gui-builder")}
             >
               GUI Builder
             </Button>
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => navigate("/documentation")}
+              icon={<FiBook size={16} />}
+            >
+              Docs
+            </Button>
           </div>
-          
+
           <div className={styles.navAuth}>
             <ThemeToggle />
-            
+
             {/* User Profile Button */}
             {user && (
               <div className={styles.userProfile} ref={dropdownRef}>
                 <div
-                  className={`${styles.userProfileButton} ${isDropdownOpen ? styles.userProfileButtonActive : ""}`}
+                  className={`${styles.userProfileButton} ${
+                    isDropdownOpen ? styles.userProfileButtonActive : ""
+                  }`}
                   onClick={toggleDropdown}
                 >
                   {user.avatarUrl ? (
@@ -189,8 +204,8 @@ const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   )}
                   <span className={styles.userName}>{user.name}</span>
-                  <FiChevronDown 
-                    size={16} 
+                  <FiChevronDown
+                    size={16}
                     className={isDropdownOpen ? styles.dropdownActive : ""}
                     color="var(--color-text-secondary)"
                   />
@@ -208,13 +223,13 @@ const Navbar: React.FC<NavbarProps> = ({
                       </button>
                     )}
                     {/* Always show Settings button if user is logged in */}
-                      <button
-                        onClick={handleSettingsClick}
-                        className={styles.dropdownItem}
-                      >
-                        <FiSettings size={16} />
-                        Settings
-                      </button>
+                    <button
+                      onClick={handleSettingsClick}
+                      className={styles.dropdownItem}
+                    >
+                      <FiSettings size={16} />
+                      Settings
+                    </button>
                     <div className={styles.dropdownDivider}></div>
                     {/* Always show Logout button if user is logged in */}
                     <button
@@ -228,7 +243,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
             )}
-            
+
             {/* Login Button (if not logged in) */}
             {!user && onLogin && (
               <Button variant="secondary" size="small" onClick={onLogin}>

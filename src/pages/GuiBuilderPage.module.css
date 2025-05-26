@@ -21,6 +21,17 @@
   margin-bottom: 24px;
 }
 
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.headerText {
+  flex: 1;
+}
+
 .builderHeader h1 {
   margin: 0 0 8px 0;
   font-size: 24px;
@@ -30,6 +41,54 @@
 .builderHeader p {
   margin: 0;
   color: var(--color-text-secondary);
+}
+
+.databaseSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.selectorLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.databaseSelect {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.databaseSelect:hover {
+  border-color: var(--color-border);
+  background-color: var(--color-surface-secondary);
+}
+
+.databaseSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.databaseSelect:disabled {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.databaseSelect option {
+  padding: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .noConnectionMessage {
@@ -375,9 +434,41 @@
   justify-content: flex-end;
 }
 
+.queryResults {
+  background: var(--color-surface);
+  padding: clamp(12px, 3vw, 20px);
+  border-radius: clamp(8px, 2vw, 12px);
+  margin-top: 16px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  width: 100%;
+  max-width: 100%;
+  height: 500px;
+  overflow-y: scroll;
+}
+
 .queryResults h2 {
   margin: 0 0 16px 0;
   font-size: 18px;
+  color: var(--color-text);
+}
+
+.resultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(12px, 2vw, 16px);
+  padding-bottom: clamp(8px, 1.5vw, 12px);
+  border-bottom: 2px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.resultsHeader span {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 600;
   color: var(--color-text);
 }
 
