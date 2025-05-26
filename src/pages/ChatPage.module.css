@@ -261,8 +261,8 @@
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
   height: 40px;
@@ -296,7 +296,7 @@
   }
   to {
     opacity: 1;
-  }
+}
 }
 
 /* Responsive styles */
@@ -322,7 +322,7 @@
   .inputSection {
     padding: 16px;
   }
-
+  
   .inputControls {
     flex-direction: column;
   }

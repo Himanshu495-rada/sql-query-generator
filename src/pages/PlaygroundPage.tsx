@@ -11,9 +11,17 @@ import { useDatabase } from "../contexts/DatabaseContext";
 import usePlayground from "../hooks/usePlayground";
 import { formatSql } from "../utils/sqlFormatter";
 import playgroundService from "../services/playgroundService";
-import queryService, { GenerateQueryPayload, ParsedSqlData } from '../services/queryService';
-import { FiCopy, FiPlay, FiMaximize2 } from 'react-icons/fi';
-import { chatMessageService, ChatMessage as ApiChatMessage } from '../services/chatMessageService';
+import queryService, {
+  GenerateQueryPayload,
+  ParsedSqlData,
+} from "../services/queryService";
+import { FiCopy, FiPlay, FiMaximize2 } from "react-icons/fi";
+import {
+  chatMessageService,
+  ChatMessage as ApiChatMessage,
+} from "../services/chatMessageService";
+import { IoRefresh } from "react-icons/io5";
+import databaseService from "../services/databaseService";
 
 // Define interfaces for the playground data structure
 interface PlaygroundItem {
@@ -31,10 +39,10 @@ interface SqlGenerationResult {
 // Utility to extract plain SQL (remove comments, normalize whitespace)
 function extractSQL(text: string): string {
   return text
-    .split('\n')
-    .filter(line => !line.trim().startsWith('--'))
-    .join(' ')
-    .replace(/\s+/g, ' ')
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("--"))
+    .join(" ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -42,7 +50,13 @@ const PlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { connections, activeConnection, setActiveConnection, refreshSchema, loadConnections } = useDatabase();
+  const {
+    connections,
+    activeConnection,
+    setActiveConnection,
+    refreshSchema,
+    loadConnections,
+  } = useDatabase();
   const {
     playground,
     createPlayground,
@@ -71,18 +85,19 @@ const PlaygroundPage: React.FC = () => {
 
   // New state for chat messages
   const [messages, setMessages] = useState<ApiChatMessage[]>([]);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Local loading state for API call from chat
   const [isApiGenerating, setIsApiGenerating] = useState(false);
 
-
   // Add sample data for testing
   const [sampleResults] = useState([]);
-  
+
   // State for recent playgrounds to show in sidebar
-  const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>([]);
+  const [recentPlaygrounds, setRecentPlaygrounds] = useState<PlaygroundItem[]>(
+    []
+  );
 
   // Example prompts for the prompt input
   const examplePrompts = [
@@ -122,7 +137,7 @@ const PlaygroundPage: React.FC = () => {
       handleCreateNewPlayground();
     }
   }, [id, playground]);
-  
+
   // Effect to fetch playgrounds for the sidebar
   useEffect(() => {
     const fetchPlaygrounds = async () => {
@@ -130,22 +145,26 @@ const PlaygroundPage: React.FC = () => {
         const playgroundsData = await playgroundService.getPlaygrounds();
         // Sort by lastUpdated to show most recent first
         const sortedPlaygrounds = [...playgroundsData].sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
 
-        setRecentPlaygrounds(sortedPlaygrounds.map(pg => ({
-          id: pg.id,
-          name: pg.name,
-          lastUsed: new Date(pg.updatedAt),
-          databaseName: pg.connections?.length > 0
-            ? pg.connections.map(conn => conn.connection.name).join(", ")
-            : 'No database'
-        })));
+        setRecentPlaygrounds(
+          sortedPlaygrounds.map((pg) => ({
+            id: pg.id,
+            name: pg.name,
+            lastUsed: new Date(pg.updatedAt),
+            databaseName:
+              pg.connections?.length > 0
+                ? pg.connections.map((conn) => conn.connection.name).join(", ")
+                : "No database",
+          }))
+        );
       } catch (error) {
-        console.error('Error fetching playgrounds:', error);
+        console.error("Error fetching playgrounds:", error);
       }
     };
-    
+
     fetchPlaygrounds();
   }, [connections]);
 
@@ -178,29 +197,35 @@ const PlaygroundPage: React.FC = () => {
   const handleDatabaseChange = async (databaseId: string) => {
     if (playground && id) {
       try {
-      // Find the database connection object by ID
-      const connection = connections.find(conn => conn.id === databaseId);
-        console.log('Changing to database:', connection);
-      if (connection) {
+        // Find the database connection object by ID
+        const connection = connections.find((conn) => conn.id === databaseId);
+        console.log("Changing to database:", connection);
+        if (connection) {
           setIsLoadingSchema(true);
-        setActiveConnection(connection);
+          setActiveConnection(connection);
 
           // Load the schema for the selected database if not already loaded
           try {
-            if (!connection.schema || Object.keys(connection.schema).length === 0) {
+            if (
+              !connection.schema ||
+              Object.keys(connection.schema).length === 0
+            ) {
               await refreshSchema();
-              console.log('Schema loaded after database change:', connection.schema);
+              console.log(
+                "Schema loaded after database change:",
+                connection.schema
+              );
             } else {
-              console.log('Using existing schema:', connection.schema);
+              console.log("Using existing schema:", connection.schema);
             }
           } catch (error) {
-            console.error('Error loading schema:', error);
+            console.error("Error loading schema:", error);
           } finally {
             setIsLoadingSchema(false);
           }
         }
       } catch (error) {
-        console.error('Error changing database:', error);
+        console.error("Error changing database:", error);
         setIsLoadingSchema(false);
       }
     }
@@ -214,19 +239,23 @@ const PlaygroundPage: React.FC = () => {
   // Effect to load schema when active connection changes
   useEffect(() => {
     const loadSchema = async () => {
-      if (activeConnection && (!activeConnection.schema || Object.keys(activeConnection.schema).length === 0)) {
-        console.log('Loading schema for connection:', activeConnection);
+      if (
+        activeConnection &&
+        (!activeConnection.schema ||
+          Object.keys(activeConnection.schema).length === 0)
+      ) {
+        console.log("Loading schema for connection:", activeConnection);
         setIsLoadingSchema(true);
         try {
           await refreshSchema();
-          console.log('Schema loaded successfully:', activeConnection.schema);
+          console.log("Schema loaded successfully:", activeConnection.schema);
         } catch (error) {
-          console.error('Error loading schema:', error);
+          console.error("Error loading schema:", error);
         } finally {
           setIsLoadingSchema(false);
         }
       } else if (activeConnection?.schema) {
-        console.log('Using existing schema:', activeConnection.schema);
+        console.log("Using existing schema:", activeConnection.schema);
       }
     };
 
@@ -236,17 +265,19 @@ const PlaygroundPage: React.FC = () => {
   // Scroll to bottom when new messages are added
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
   // Fetch all chat messages for the playground on load
   useEffect(() => {
     if (id) {
-      chatMessageService.getAllForPlayground(id)
+      chatMessageService
+        .getAllForPlayground(id)
         .then(setMessages)
         .catch((err) => {
-          console.error('Failed to fetch chat messages:', err);
+          console.error("Failed to fetch chat messages:", err);
           setMessages([]);
         });
     }
@@ -257,15 +288,19 @@ const PlaygroundPage: React.FC = () => {
     if (!prompt.trim() || isApiGenerating || isGenerating) return;
 
     if (!id || !activeConnection?.id || !user?.id) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        playgroundId: id || '',
-        userId: user?.id || '',
-        sender: 'ai',
-        message: 'Error: Playground ID, Active Connection ID, or User ID is missing to generate SQL.',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          playgroundId: id || "",
+          userId: user?.id || "",
+          sender: "ai",
+          message:
+            "Error: Playground ID, Active Connection ID, or User ID is missing to generate SQL.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
       setIsApiGenerating(false);
       return;
     }
@@ -275,14 +310,14 @@ const PlaygroundPage: React.FC = () => {
       id: `user-${Date.now()}`,
       playgroundId: id,
       userId: user.id,
-      sender: 'user',
+      sender: "user",
       message: prompt,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     const currentPrompt = prompt;
-    setPrompt('');
+    setPrompt("");
     setIsApiGenerating(true);
 
     const payload: GenerateQueryPayload = {
@@ -294,38 +329,50 @@ const PlaygroundPage: React.FC = () => {
     try {
       const response = await queryService.generateQuery(payload);
       if (!response.success || !response.data || !response.data.query) {
-        throw new Error(response.message || 'API returned unsuccessful response or missing data.');
+        throw new Error(
+          response.message ||
+            "API returned unsuccessful response or missing data."
+        );
       }
       // After backend processes, refetch all chat messages for the playground
       const updatedMessages = await chatMessageService.getAllForPlayground(id);
       setMessages(updatedMessages);
     } catch (error: any) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        playgroundId: id,
-        userId: user.id,
-        sender: 'ai',
-        message: error.message || 'An unknown error occurred.',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          playgroundId: id,
+          userId: user.id,
+          sender: "ai",
+          message: error.message || "An unknown error occurred.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
     }
     setIsApiGenerating(false);
   };
 
   // Handle query execution
   const handleExecuteQuery = async (sql: string) => {
-    const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai' && m.sql && m.queryId);
+    const lastAiMsg = [...messages]
+      .reverse()
+      .find((m) => m.sender === "ai" && m.sql && m.queryId);
     if (!lastAiMsg || !lastAiMsg.queryId) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        playgroundId: id || '',
-        userId: user?.id || '',
-        sender: 'ai',
-        message: 'No valid queryId found for execution. Please generate a query first.',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          playgroundId: id || "",
+          userId: user?.id || "",
+          sender: "ai",
+          message:
+            "No valid queryId found for execution. Please generate a query first.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
       return;
     }
     try {
@@ -333,12 +380,12 @@ const PlaygroundPage: React.FC = () => {
       setIsApiGenerating(true);
       // Parse the sql if it's JSON-wrapped
       let sqlToExecute = sql;
-      if (typeof sql === 'string') {
+      if (typeof sql === "string") {
         let trimmed = sql.trim();
-        if (trimmed.startsWith('json')) {
-          trimmed = trimmed.replace(/^json\s*/, '');
+        if (trimmed.startsWith("json")) {
+          trimmed = trimmed.replace(/^json\s*/, "");
         }
-        if (trimmed.startsWith('{')) {
+        if (trimmed.startsWith("{")) {
           try {
             const parsed = JSON.parse(trimmed);
             if (parsed.query) sqlToExecute = parsed.query;
@@ -349,10 +396,16 @@ const PlaygroundPage: React.FC = () => {
         // Always clean the SQL before sending
         sqlToExecute = extractSQL(sqlToExecute);
       }
-      const response = await queryService.executeQuery(lastAiMsg.queryId, sqlToExecute);
+      const response = await queryService.executeQuery(
+        lastAiMsg.queryId,
+        sqlToExecute
+      );
       // Extract rows from response
       let resultRows: any[] = [];
-      if (response.data?.query?.result?.rows && Array.isArray(response.data.query.result.rows)) {
+      if (
+        response.data?.query?.result?.rows &&
+        Array.isArray(response.data.query.result.rows)
+      ) {
         resultRows = response.data.query.result.rows;
       } else if (Array.isArray(response.data?.query?.result)) {
         resultRows = response.data.query.result;
@@ -360,36 +413,39 @@ const PlaygroundPage: React.FC = () => {
       // Add result message to chat
       const resultMsg: ApiChatMessage = {
         id: `result-${Date.now()}`,
-        playgroundId: id || '',
-        userId: user?.id || '',
-        sender: 'ai',
-        message: 'Query executed successfully.',
+        playgroundId: id || "",
+        userId: user?.id || "",
+        sender: "ai",
+        message: "Query executed successfully.",
         sql: sqlToExecute,
         results: resultRows,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, resultMsg]);
+      setMessages((prev) => [...prev, resultMsg]);
       // Save result message in backend chat
       await chatMessageService.addMessage({
         playgroundId: id!,
         userId: user!.id,
-        sender: 'ai',
-        message: 'Query executed successfully.',
+        sender: "ai",
+        message: "Query executed successfully.",
         sql: sqlToExecute,
         queryId: lastAiMsg.queryId,
         results: resultRows,
       });
     } catch (error) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        playgroundId: id || '',
-        userId: user?.id || '',
-        sender: 'ai',
-        message: 'Error executing query: ' + (error as Error).message,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          playgroundId: id || "",
+          userId: user?.id || "",
+          sender: "ai",
+          message: "Error executing query: " + (error as Error).message,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
     } finally {
       setIsApiGenerating(false);
     }
@@ -402,7 +458,10 @@ const PlaygroundPage: React.FC = () => {
   };
 
   // Handle exporting data
-  const handleExportData = (format: "json" | "csv" | "xml", dataToExport?: any[]) => {
+  const handleExportData = (
+    format: "json" | "csv" | "xml",
+    dataToExport?: any[]
+  ) => {
     const data = dataToExport || queryResults || sampleResults; // Use passed data, fallback to hook's queryResults or sample
 
     if (!data || data.length === 0) {
@@ -484,10 +543,10 @@ const PlaygroundPage: React.FC = () => {
   }, [isActionsDropdownOpen]);
 
   // Add a function to get active connections for the current playground
-  const getPlaygroundConnections = useCallback(() => {
-    if (!playground) return [];
-    return playground.connections?.map(conn => conn.connection) || [];
-  }, [playground]);
+  // const getPlaygroundConnections = useCallback(() => {
+  //   if (!playground) return [];
+  //   return playground.connections?.map((conn) => conn.connection) || [];
+  // }, [playground]);
 
   // Handle playground deletion
   const handleDeletePlayground = async () => {
@@ -511,10 +570,39 @@ const PlaygroundPage: React.FC = () => {
   // Update the condition to check for active connection
   const noConnection = !activeConnection || !playground?.connections.length;
 
+  const handleSandboxReset = async () => {
+    if (!activeConnection || !playground) {
+      console.error("No active connection or playground to sync.");
+      return;
+    }
+
+    // check if the active connection has a sandbox else throw error
+    if (!activeConnection.sandboxDb) {
+      console.error("No SandboxDB associated with the active connection.");
+      return;
+    }
+
+    try {
+      setIsLoadingSchema(true);
+      await databaseService.resetSandboxDb(activeConnection.sandboxDb.id);
+      console.log("SandboxDB reset successfully.");
+      await refreshSchema();
+      console.log("SandboxDB synced successfully.");
+    } catch (error) {
+      console.error("Error syncing SandboxDB:", error);
+    } finally {
+      setIsLoadingSchema(false);
+    }
+  };
+
   return (
     <div className={styles.playgroundPage}>
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl || undefined } : undefined}
+        user={
+          user
+            ? { name: user.name, avatarUrl: user.avatarUrl || undefined }
+            : undefined
+        }
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         onCreatePlayground={handleCreateNewPlayground}
@@ -539,7 +627,7 @@ const PlaygroundPage: React.FC = () => {
             onPlaygroundClick={(id) => navigate(`/playground/${id}`)}
             onCreatePlayground={handleCreateNewPlayground}
             onDatabaseClick={(id) => {
-              const connection = connections.find(conn => conn.id === id);
+              const connection = connections.find((conn) => conn.id === id);
               if (connection) {
                 setActiveConnection(connection);
               }
@@ -574,13 +662,16 @@ const PlaygroundPage: React.FC = () => {
 
               <div className={styles.databaseInfo}>
                 {activeConnection ? (
-                  <>
-                    {activeConnection.name}
-                  </>
+                  <>{activeConnection.name}</>
                 ) : (
                   "No database connected"
                 )}
               </div>
+              <IoRefresh
+                title="Sync SandboxDB"
+                size={24}
+                onClick={handleSandboxReset}
+              />
             </div>
 
             <div className={styles.headerRight}>
@@ -660,9 +751,14 @@ const PlaygroundPage: React.FC = () => {
                       <p>Loading database schema...</p>
                     </div>
                   ) : (
-                  <DatabaseExplorer
-                      databases={connections.map(connection => {
-                        console.log('Mapping connection:', connection.name, 'Schema:', connection.schema);
+                    <DatabaseExplorer
+                      databases={connections.map((connection) => {
+                        console.log(
+                          "Mapping connection:",
+                          connection.name,
+                          "Schema:",
+                          connection.schema
+                        );
                         return {
                           id: connection.id,
                           name: connection.name,
@@ -672,29 +768,29 @@ const PlaygroundPage: React.FC = () => {
                           views: connection.schema?.views || [],
                         };
                       })}
-                      activeDatabase={activeConnection?.id || ''}
+                      activeDatabase={activeConnection?.id || ""}
                       onDatabaseChange={handleDatabaseChange}
-                    onTableSelect={(tableName) => {
+                      onTableSelect={(tableName) => {
                         const table = activeConnection?.schema?.tables.find(
-                        (t) => t.name === tableName
-                      );
-                      if (table) {
-                        const columns = table.columns
-                          .map((c) => c.name)
-                          .join(", ");
-                        const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
-                        setCurrentSql(formatSql(sql));
-                      }
-                    }}
-                    onColumnSelect={(tableName, columnName) => {
-                      const currentSql = playground?.currentSql || "";
-                      if (!currentSql.includes(columnName)) {
-                        setCurrentSql(
-                          `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
+                          (t) => t.name === tableName
                         );
-                      }
-                    }}
-                  />
+                        if (table) {
+                          const columns = table.columns
+                            .map((c) => c.name)
+                            .join(", ");
+                          const sql = `SELECT ${columns}\nFROM ${tableName}\nLIMIT 100;`;
+                          setCurrentSql(formatSql(sql));
+                        }
+                      }}
+                      onColumnSelect={(tableName, columnName) => {
+                        const currentSql = playground?.currentSql || "";
+                        if (!currentSql.includes(columnName)) {
+                          setCurrentSql(
+                            `SELECT ${tableName}.${columnName}\nFROM ${tableName}\nLIMIT 100;`
+                          );
+                        }
+                      }}
+                    />
                   )}
                 </div>
               )}
@@ -703,7 +799,11 @@ const PlaygroundPage: React.FC = () => {
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`${styles.messageBox} ${message.sender === 'user' ? styles.userMessage : styles.assistantMessage}`}
+                    className={`${styles.messageBox} ${
+                      message.sender === "user"
+                        ? styles.userMessage
+                        : styles.assistantMessage
+                    }`}
                   >
                     <div>{message.message}</div>
 
@@ -720,66 +820,93 @@ const PlaygroundPage: React.FC = () => {
                               <FiCopy className={styles.icon} /> Copy
                             </Button>
                             <Button
-                        variant="primary"
-                        size="small"
+                              variant="primary"
+                              size="small"
                               onClick={() => handleExecuteQuery(message.sql!)}
-                              disabled={isExecuting || noConnection} 
+                              disabled={isExecuting || noConnection}
                             >
                               <FiPlay className={styles.icon} /> Run
                             </Button>
                           </div>
                         </div>
                         <pre className={styles.queryContent}>{message.sql}</pre>
-                    </div>
+                      </div>
                     )}
 
-                    {message.results && Array.isArray(message.results) && message.results.length > 0 && (
-                      <div className={styles.resultsBox}>
-                        <div className={styles.resultsHeader}>
-                          <span>Results ({message.results.length} rows)</span>
-                          <div className={styles.resultsActions}>
-                            <Button size="small" onClick={() => { setExpandedResult(message.results || []); setIsResultModalOpen(true); }}>
-                              <FiMaximize2 className={styles.icon} /> Expand
-                            </Button>
-                            <Button size="small" onClick={() => handleExportData('json', message.results)}>
-                              Export JSON
-                            </Button>
-                            <Button size="small" onClick={() => handleExportData('csv', message.results)}>
-                              Export CSV
-                            </Button>
-                            <Button size="small" onClick={() => handleExportData('xml', message.results)}>
-                              Export XML
-                            </Button>
+                    {message.results &&
+                      Array.isArray(message.results) &&
+                      message.results.length > 0 && (
+                        <div className={styles.resultsBox}>
+                          <div className={styles.resultsHeader}>
+                            <span>Results ({message.results.length} rows)</span>
+                            <div className={styles.resultsActions}>
+                              <Button
+                                size="small"
+                                onClick={() => {
+                                  setExpandedResult(message.results || []);
+                                  setIsResultModalOpen(true);
+                                }}
+                              >
+                                <FiMaximize2 className={styles.icon} /> Expand
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  handleExportData("json", message.results)
+                                }
+                              >
+                                Export JSON
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  handleExportData("csv", message.results)
+                                }
+                              >
+                                Export CSV
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  handleExportData("xml", message.results)
+                                }
+                              >
+                                Export XML
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className={styles.resultsTableWrapper}>
-                          <table className={styles.resultsTable}>
-                            <thead>
-                              <tr>
-                                {Object.keys(message.results[0]).map((col) => (
-                                  <th key={col}>{col}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {message.results.map((row, i) => (
-                                <tr key={i}>
-                                  {Object.values(row).map((val, j) => (
-                                    <td key={j}>{String(val)}</td>
-                                  ))}
+                          <div className={styles.resultsTableWrapper}>
+                            <table className={styles.resultsTable}>
+                              <thead>
+                                <tr>
+                                  {Object.keys(message.results[0]).map(
+                                    (col) => (
+                                      <th key={col}>{col}</th>
+                                    )
+                                  )}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                              </thead>
+                              <tbody>
+                                {message.results.map((row, i) => (
+                                  <tr key={i}>
+                                    {Object.values(row).map((val, j) => (
+                                      <td key={j}>{String(val)}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       )}
                   </div>
                 ))}
                 {isGenerating && (
-                    <div className={`${styles.messageBox} ${styles.assistantMessage} ${styles.typingIndicatorContainer} /* Ensure these styles are defined */`}>
-                         <p className={styles.typingIndicator}>AI is thinking...</p>
-                    </div>
+                  <div
+                    className={`${styles.messageBox} ${styles.assistantMessage} ${styles.typingIndicatorContainer} /* Ensure these styles are defined */`}
+                  >
+                    <p className={styles.typingIndicator}>AI is thinking...</p>
+                  </div>
                 )}
                 <div className={styles.inputContainer}>
                   <div className={styles.inputWrapper}>
@@ -789,7 +916,7 @@ const PlaygroundPage: React.FC = () => {
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Describe what you want to query in natural language..."
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
+                        if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           handlePromptSubmit();
                         }
@@ -799,10 +926,14 @@ const PlaygroundPage: React.FC = () => {
                     <Button
                       className={styles.sendButton}
                       onClick={handlePromptSubmit}
-                      disabled={!prompt.trim() || isApiGenerating || isGenerating}
+                      disabled={
+                        !prompt.trim() || isApiGenerating || isGenerating
+                      }
                       variant="primary"
                     >
-                      {isApiGenerating || isGenerating ? 'Generating...' : 'Send'}
+                      {isApiGenerating || isGenerating
+                        ? "Generating..."
+                        : "Send"}
                     </Button>
                   </div>
                 </div>
@@ -870,9 +1001,23 @@ const PlaygroundPage: React.FC = () => {
           <div>No results to display.</div>
         )}
         <div className={styles.resultsModalActions}>
-          <Button onClick={() => handleExportData('json', expandedResult || undefined)}>Export JSON</Button>
-          <Button onClick={() => handleExportData('csv', expandedResult || undefined)}>Export CSV</Button>
-          <Button onClick={() => handleExportData('xml', expandedResult || undefined)}>Export XML</Button>
+          <Button
+            onClick={() =>
+              handleExportData("json", expandedResult || undefined)
+            }
+          >
+            Export JSON
+          </Button>
+          <Button
+            onClick={() => handleExportData("csv", expandedResult || undefined)}
+          >
+            Export CSV
+          </Button>
+          <Button
+            onClick={() => handleExportData("xml", expandedResult || undefined)}
+          >
+            Export XML
+          </Button>
         </div>
       </Modal>
     </div>

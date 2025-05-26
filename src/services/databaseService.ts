@@ -89,29 +89,36 @@ class DatabaseService {
       // Special handling for SQLite file upload
       if (params.type === DatabaseType.SQLITE && params.file) {
         const formData = new FormData();
-        formData.append('sqliteFile', params.file);
-        formData.append('name', params.name);
-        formData.append('type', params.type);
-        formData.append('createSandbox', params.createSandbox ? 'true' : 'false');
-        
-        const response = await api.uploadFile<{ data: { connection: DatabaseConnection } }>('connections/sqlite-upload', formData);
+        formData.append("sqliteFile", params.file);
+        formData.append("name", params.name);
+        formData.append("type", params.type);
+        formData.append(
+          "createSandbox",
+          params.createSandbox ? "true" : "false"
+        );
+
+        const response = await api.uploadFile<{
+          data: { connection: DatabaseConnection };
+        }>("connections/sqlite-upload", formData);
         if (!response.data?.connection) {
-          throw new Error('Invalid response format from server');
+          throw new Error("Invalid response format from server");
         }
         return this.normalizeConnection(response.data.connection);
       }
-      
+
       // Regular connection
-      const response = await api.post<{ data: { connection: DatabaseConnection } }>('connections', params);
+      const response = await api.post<{
+        data: { connection: DatabaseConnection };
+      }>("connections", params);
       if (!response.data?.connection) {
-        throw new Error('Invalid response format from server');
+        throw new Error("Invalid response format from server");
       }
       return this.normalizeConnection(response.data.connection);
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to connect to database');
+      throw new Error("Failed to connect to database");
     }
   }
 
@@ -125,7 +132,7 @@ class DatabaseService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to disconnect from database');
+      throw new Error("Failed to disconnect from database");
     }
   }
 
@@ -137,14 +144,24 @@ class DatabaseService {
     query: string
   ): Promise<QueryResult> {
     try {
-      // The backend route 'database/execute' responds with: 
+      // The backend route 'database/execute' responds with:
       // { success: boolean, data: { result: { rows: any[], rowCount: number, executionTime: number, columns?: string[] } } }
       // The api.post<T> method returns the `data` part of the axios response.
-      const backendResponse = await api.post<{ success: boolean, data: { result: { rows: any[], rowCount: number, executionTime: number, columns?: string[] } } }>('database/execute', {
+      const backendResponse = await api.post<{
+        success: boolean;
+        data: {
+          result: {
+            rows: any[];
+            rowCount: number;
+            executionTime: number;
+            columns?: string[];
+          };
+        };
+      }>("database/execute", {
         connectionId,
         sqlQuery: query,
       });
-      
+
       // Ensure we correctly access the nested result object
       const actualResult = backendResponse.data.result;
 
@@ -157,7 +174,7 @@ class DatabaseService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to execute query');
+      throw new Error("Failed to execute query");
     }
   }
 
@@ -166,14 +183,14 @@ class DatabaseService {
    */
   async getConnections(): Promise<DatabaseConnection[]> {
     try {
-      const response = await api.get('connections');
-      
+      const response = await api.get("connections");
+
       // Validate response
       if (!response) {
-        console.error('Empty response from connections API');
+        console.error("Empty response from connections API");
         return [];
       }
-      
+
       // Extract connections array from response
       let connections: any[] = [];
       if (Array.isArray(response)) {
@@ -183,24 +200,27 @@ class DatabaseService {
       } else if (response.data && Array.isArray(response.data.connections)) {
         connections = response.data.connections;
       } else {
-        console.error('Invalid response format from connections API:', response);
+        console.error(
+          "Invalid response format from connections API:",
+          response
+        );
         return [];
       }
-      
+
       // Map and validate each connection
       return connections
-        .filter(conn => conn && typeof conn === 'object')
-        .map(conn => {
+        .filter((conn) => conn && typeof conn === "object")
+        .map((conn) => {
           try {
             return this.normalizeConnection(conn);
           } catch (err) {
-            console.error('Failed to normalize connection:', err, conn);
+            console.error("Failed to normalize connection:", err, conn);
             return null;
           }
         })
         .filter((conn): conn is DatabaseConnection => conn !== null);
     } catch (error) {
-      console.error('Failed to get connections:', error);
+      console.error("Failed to get connections:", error);
       throw error; // Let the context handle the error
     }
   }
@@ -210,13 +230,15 @@ class DatabaseService {
    */
   async getConnection(connectionId: string): Promise<DatabaseConnection> {
     try {
-      const response = await api.get<{ connection: any }>(`connections/${connectionId}`);
+      const response = await api.get<{ connection: any }>(
+        `connections/${connectionId}`
+      );
       return this.normalizeConnection(response.connection);
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to get connection details');
+      throw new Error("Failed to get connection details");
     }
   }
 
@@ -226,10 +248,10 @@ class DatabaseService {
   async refreshSchema(connectionId: string): Promise<DatabaseSchema> {
     try {
       const response = await api.get(`connections/${connectionId}/schema`);
-      
+
       // Extract schema data from response
       const schemaData = response?.data?.schema || response?.schema || response;
-      
+
       if (!schemaData) {
         console.error("No schema data in response:", response);
         return { tables: [], views: [] };
@@ -237,29 +259,37 @@ class DatabaseService {
 
       // Normalize the schema data
       const schema: DatabaseSchema = {
-        tables: Array.isArray(schemaData.tables) ? schemaData.tables.map((table: any) => ({
-          name: table.name,
-          columns: Array.isArray(table.columns) ? table.columns.map((col: any) => ({
-            name: col.name,
-            type: col.type,
-            nullable: Boolean(col.nullable),
-            isPrimaryKey: Boolean(col.isPrimaryKey),
-            isForeignKey: Boolean(col.isForeignKey),
-            referencedTable: col.referencedTable,
-            referencedColumn: col.referencedColumn,
-          })) : [],
-          rowCount: table.rowCount,
-        })) : [],
-        views: Array.isArray(schemaData.views) ? schemaData.views.map((view: any) => ({
-          name: view.name,
-          columns: Array.isArray(view.columns) ? view.columns.map((col: any) => ({
-            name: col.name,
-            type: col.type,
-            nullable: Boolean(col.nullable),
-            isPrimaryKey: false,
-            isForeignKey: false,
-          })) : [],
-        })) : [],
+        tables: Array.isArray(schemaData.tables)
+          ? schemaData.tables.map((table: any) => ({
+              name: table.name,
+              columns: Array.isArray(table.columns)
+                ? table.columns.map((col: any) => ({
+                    name: col.name,
+                    type: col.type,
+                    nullable: Boolean(col.nullable),
+                    isPrimaryKey: Boolean(col.isPrimaryKey),
+                    isForeignKey: Boolean(col.isForeignKey),
+                    referencedTable: col.referencedTable,
+                    referencedColumn: col.referencedColumn,
+                  }))
+                : [],
+              rowCount: table.rowCount,
+            }))
+          : [],
+        views: Array.isArray(schemaData.views)
+          ? schemaData.views.map((view: any) => ({
+              name: view.name,
+              columns: Array.isArray(view.columns)
+                ? view.columns.map((col: any) => ({
+                    name: col.name,
+                    type: col.type,
+                    nullable: Boolean(col.nullable),
+                    isPrimaryKey: false,
+                    isForeignKey: false,
+                  }))
+                : [],
+            }))
+          : [],
       };
 
       console.log("Normalized schema:", schema);
@@ -269,7 +299,7 @@ class DatabaseService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to refresh schema');
+      throw new Error("Failed to refresh schema");
     }
   }
 
@@ -278,13 +308,13 @@ class DatabaseService {
    */
   async testConnection(params: ConnectionParams): Promise<boolean> {
     try {
-      await api.post('connections/test', params);
+      await api.post("connections/test", params);
       return true;
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Connection test failed');
+      throw new Error("Connection test failed");
     }
   }
 
@@ -294,18 +324,22 @@ class DatabaseService {
   async loadSampleDatabase(sampleId: string): Promise<DatabaseConnection> {
     try {
       // Get the sample database details
-      const response = await api.get<{ sampleDatabases: any[] }>('connections/sample/all');
-      
-      const sample = response.sampleDatabases.find(
-        db => db.id === sampleId || db.name === sampleId
+      const response = await api.get<{ sampleDatabases: any[] }>(
+        "connections/sample/all"
       );
-      
+
+      const sample = response.sampleDatabases.find(
+        (db) => db.id === sampleId || db.name === sampleId
+      );
+
       if (!sample) {
         throw new Error(`Sample database ${sampleId} not found`);
       }
-      
+
       // Connect to the sample database
-      const connectionResponse = await api.post<{ connection: DatabaseConnection }>('connections', {
+      const connectionResponse = await api.post<{
+        connection: DatabaseConnection;
+      }>("connections", {
         name: sample.name,
         type: sample.type,
         host: sample.host,
@@ -314,15 +348,15 @@ class DatabaseService {
         password: sample.password,
         database: sample.database,
         isSample: true,
-        createSandbox: true
+        createSandbox: true,
       });
-      
+
       return this.normalizeConnection(connectionResponse.connection);
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to load sample database');
+      throw new Error("Failed to load sample database");
     }
   }
 
@@ -336,10 +370,25 @@ class DatabaseService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to delete connection');
+      throw new Error("Failed to delete connection");
     }
   }
-  
+
+  /** Sync sandboxdb with actual DB */
+  async resetSandboxDb(sandboxID: string): Promise<DatabaseConnection> {
+    try {
+      const response = await api.post<{ connection: DatabaseConnection }>(
+        `sandbox/reset/${sandboxID}`
+      );
+      return this.normalizeConnection(response.connection);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to sync sandbox database");
+    }
+  }
+
   /**
    * Normalize a connection object from the API
    */
@@ -351,29 +400,37 @@ class DatabaseService {
     let schema: DatabaseSchema | undefined;
     if (connData.schema) {
       schema = {
-        tables: Array.isArray(connData.schema.tables) ? connData.schema.tables.map((table: any) => ({
-          name: table.name,
-          columns: Array.isArray(table.columns) ? table.columns.map((col: any) => ({
-            name: col.name,
-            type: col.type,
-            nullable: Boolean(col.nullable),
-            isPrimaryKey: Boolean(col.isPrimaryKey),
-            isForeignKey: Boolean(col.isForeignKey),
-            referencedTable: col.referencedTable,
-            referencedColumn: col.referencedColumn,
-          })) : [],
-          rowCount: table.rowCount,
-        })) : [],
-        views: Array.isArray(connData.schema.views) ? connData.schema.views.map((view: any) => ({
-          name: view.name,
-          columns: Array.isArray(view.columns) ? view.columns.map((col: any) => ({
-            name: col.name,
-            type: col.type,
-            nullable: Boolean(col.nullable),
-            isPrimaryKey: false,
-            isForeignKey: false,
-          })) : [],
-        })) : [],
+        tables: Array.isArray(connData.schema.tables)
+          ? connData.schema.tables.map((table: any) => ({
+              name: table.name,
+              columns: Array.isArray(table.columns)
+                ? table.columns.map((col: any) => ({
+                    name: col.name,
+                    type: col.type,
+                    nullable: Boolean(col.nullable),
+                    isPrimaryKey: Boolean(col.isPrimaryKey),
+                    isForeignKey: Boolean(col.isForeignKey),
+                    referencedTable: col.referencedTable,
+                    referencedColumn: col.referencedColumn,
+                  }))
+                : [],
+              rowCount: table.rowCount,
+            }))
+          : [],
+        views: Array.isArray(connData.schema.views)
+          ? connData.schema.views.map((view: any) => ({
+              name: view.name,
+              columns: Array.isArray(view.columns)
+                ? view.columns.map((col: any) => ({
+                    name: col.name,
+                    type: col.type,
+                    nullable: Boolean(col.nullable),
+                    isPrimaryKey: false,
+                    isForeignKey: false,
+                  }))
+                : [],
+            }))
+          : [],
       };
     }
 
@@ -388,10 +445,12 @@ class DatabaseService {
       lastConnected: connData.updatedAt ? new Date(connData.updatedAt) : null,
       isSandbox: Boolean(connData.sandboxDb),
       schema: schema, // Include the normalized schema
-      sandboxDb: connData.sandboxDb ? {
-        id: connData.sandboxDb.id,
-        name: connData.sandboxDb.name
-      } : undefined
+      sandboxDb: connData.sandboxDb
+        ? {
+            id: connData.sandboxDb.id,
+            name: connData.sandboxDb.name,
+          }
+        : undefined,
     };
   }
 }

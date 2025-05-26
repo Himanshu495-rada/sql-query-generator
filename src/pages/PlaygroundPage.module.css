@@ -343,7 +343,7 @@
   background-color: var(--color-surface-secondary);
   border-radius: 8px;
   overflow: hidden;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   position: relative;
 }
 
@@ -493,6 +493,8 @@
   color: var(--color-text);
   width: 100%;
   max-width: 100%;
+  height: 500px;
+  overflow-y: scroll;
 }
 
 .resultsHeader {
@@ -1028,7 +1030,6 @@
     width: 80%;
   }
 
-
   .sidebarLayout {
     flex-direction: column;
   }
@@ -1046,7 +1047,8 @@
     padding: var(--spacing-sm);
   }
 
-  .centralPanel, .editorAndExplorer {
+  .centralPanel,
+  .editorAndExplorer {
     flex-direction: column;
   }
 
@@ -1075,7 +1077,8 @@
     display: none; /* Hide resizers on small screens as layout is stacked */
   }
 
-  .editorColumn, .explorerColumn {
+  .editorColumn,
+  .explorerColumn {
     width: 100% !important; /* Override inline styles from resizer */
     padding-left: 0 !important;
     padding-right: 0 !important;
