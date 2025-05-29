@@ -54,7 +54,6 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
   >("tables");
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showSystemObjects, setShowSystemObjects] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Debug schema
@@ -74,7 +73,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
   const normalizedSchema = {
     tables: schema?.tables || [],
     views: schema?.views || [],
-    procedures: schema?.procedures || []
+    procedures: schema?.procedures || [],
   };
 
   // Filter functions
@@ -92,7 +91,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
     return items.filter(
       (item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (showSystemObjects || !isSystemObject(item.name))
+        !isSystemObject(item.name) // Hide system objects by default
     );
   };
 
@@ -122,20 +121,19 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
     setExpandedSection(section);
     setExpandedItem(null);
   };
-
   // Helper rendering functions
-  const renderColumnInfo = (column: Column, tableName: string) => {
+  const renderColumnInfo = (column: Column) => {
     const getColumnIcon = () => {
       if (column.isPrimaryKey) return "🔑";
       if (column.isForeignKey) return "🔗";
       return "📋";
     };
-    
+
     const getColumnClass = () => {
       const classes = [styles.columnItem];
       if (column.isPrimaryKey) classes.push(styles.primaryKeyColumn);
       if (column.isForeignKey) classes.push(styles.foreignKeyColumn);
-      return classes.join(' ');
+      return classes.join(" ");
     };
 
     return (
@@ -151,8 +149,8 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
         )}
         {column.isForeignKey && column.referencedTable && (
           <div className={styles.foreignKeyInfo}>
-            → 
-            <span 
+            →
+            <span
               className={styles.foreignKeyReference}
               onClick={(e) => {
                 e.stopPropagation();
@@ -196,7 +194,6 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
             placeholder="Search schema..."
             className={styles.searchInput}
           />
-          
         </div>
       </div>
 
@@ -258,7 +255,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
                         <div className={styles.columnName}>Column</div>
                         <div className={styles.columnType}>Type</div>
                       </div>
-                      {table.columns.map((column) => renderColumnInfo(column, table.name))}
+                      {table.columns.map((column) => renderColumnInfo(column))}
                     </div>
                   )}
                 </div>
@@ -295,7 +292,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({
                         <div className={styles.columnName}>Column</div>
                         <div className={styles.columnType}>Type</div>
                       </div>
-                      {view.columns.map((column) => renderColumnInfo(column, view.name))}
+                      {view.columns.map((column) => renderColumnInfo(column))}
                     </div>
                   )}
                 </div>

@@ -19,6 +19,16 @@ export interface Playground {
   connections: PlaygroundConnection[];
 }
 
+interface PlaygroundApiData {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  connections?: PlaygroundConnection[];
+}
+
 export interface QueryHistoryItem {
   id: string;
   prompt: string;
@@ -90,26 +100,15 @@ class PlaygroundService {
         console.log(
           `Successfully loaded ${playgroundsData.length} playgrounds from API:`,
           playgroundsData
-        );
-
-        // Convert API data to our Playground interface
-        return playgroundsData.map((pg: any) => ({
+        ); // Convert API data to our Playground interface
+        return playgroundsData.map((pg: PlaygroundApiData) => ({
           id: pg.id,
           name: pg.name,
-          databaseId:
-            pg.connections && pg.connections.length > 0
-              ? pg.connections[0]?.connectionId
-              : null,
-          currentSql: pg.currentSql || "",
-          currentPrompt: pg.currentPrompt || "",
-          currentExplanation: pg.currentExplanation || "",
-          history: Array.isArray(pg.history)
-            ? pg.history.map((item: any) => ({
-                ...item,
-                timestamp: new Date(item.timestamp || Date.now()),
-              }))
-            : [],
-          lastUpdated: new Date(pg.updatedAt || pg.createdAt || Date.now()),
+          description: pg.description,
+          userId: pg.userId,
+          createdAt: pg.createdAt,
+          updatedAt: pg.updatedAt,
+          connections: pg.connections || [],
         }));
       }
 
@@ -133,9 +132,7 @@ class PlaygroundService {
 
       // Check if API returned valid data in the expected format
       if (response?.success === true && response?.data?.playground) {
-        const playgroundData = response.data.playground;
-
-        // Format the playground data to match the Playground interface
+        const playgroundData = response.data.playground; // Format the playground data to match the Playground interface
         return {
           id: playgroundData.id,
           name: playgroundData.name,
@@ -154,17 +151,21 @@ class PlaygroundService {
       return null; // Return null on error
     }
   }
-
   /**
+   * Create a new playground
+     /**
    * Create a new playground
    */
   async createPlayground(
     name: string,
-    databaseId: string | null = null
+    connectionIds: string[] = []
   ): Promise<Playground | null> {
     try {
       console.log(`Creating playground: ${name}`);
-      const response = await api.post("playgrounds", { name, databaseId });
+      const response = await api.post("playgrounds", {
+        name,
+        connections: connectionIds,
+      });
 
       // Check if API returned valid data
       if (
@@ -177,17 +178,11 @@ class PlaygroundService {
         return {
           id: playgroundData.id,
           name: playgroundData.name,
-          databaseId:
-            playgroundData.connections && playgroundData.connections.length > 0
-              ? playgroundData.connections[0]?.connectionId
-              : null,
-          currentSql: "",
-          currentPrompt: "",
-          currentExplanation: "",
-          history: [],
-          lastUpdated: new Date(
-            playgroundData.updatedAt || playgroundData.createdAt || Date.now()
-          ),
+          description: playgroundData.description,
+          userId: playgroundData.userId,
+          createdAt: playgroundData.createdAt,
+          updatedAt: playgroundData.updatedAt,
+          connections: playgroundData.connections || [],
         };
       }
 
@@ -215,28 +210,15 @@ class PlaygroundService {
         response?.data?.success === true &&
         response?.data?.data?.playground
       ) {
-        const playgroundData = response.data.data.playground;
-
-        // Format the playground data to match the Playground interface
+        const playgroundData = response.data.data.playground; // Format the playground data to match the Playground interface
         return {
           id: playgroundData.id,
           name: playgroundData.name,
-          databaseId:
-            playgroundData.connections && playgroundData.connections.length > 0
-              ? playgroundData.connections[0]?.connectionId
-              : null,
-          currentSql: playgroundData.currentSql || "",
-          currentPrompt: playgroundData.currentPrompt || "",
-          currentExplanation: playgroundData.currentExplanation || "",
-          history: Array.isArray(playgroundData.history)
-            ? playgroundData.history.map((item: any) => ({
-                ...item,
-                timestamp: new Date(item.timestamp || Date.now()),
-              }))
-            : [],
-          lastUpdated: new Date(
-            playgroundData.updatedAt || playgroundData.createdAt || Date.now()
-          ),
+          description: playgroundData.description,
+          userId: playgroundData.userId,
+          createdAt: playgroundData.createdAt,
+          updatedAt: playgroundData.updatedAt,
+          connections: playgroundData.connections || [],
         };
       }
 

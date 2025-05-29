@@ -63,7 +63,7 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
     setError(null);
 
     try {
-      await refreshSchema(databaseId);
+      await refreshSchema();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to refresh schema");
     } finally {
@@ -153,7 +153,9 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
       <div className={styles.databaseDetailsPage}>
         <Navbar
           user={
-            user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined
+            user
+              ? { name: user.name, avatarUrl: user.avatarUrl || undefined }
+              : undefined
           }
           onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
           isSidebarVisible={isSidebarVisible}
@@ -198,7 +200,9 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
       <div className={styles.databaseDetailsPage}>
         <Navbar
           user={
-            user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined
+            user
+              ? { name: user.name, avatarUrl: user.avatarUrl || undefined }
+              : undefined
           }
           onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
           isSidebarVisible={isSidebarVisible}
@@ -243,13 +247,17 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
 
   return (
     <div className={styles.databaseDetailsPage}>
+      {" "}
       <Navbar
-        user={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
+        user={
+          user
+            ? { name: user.name, avatarUrl: user.avatarUrl || undefined }
+            : undefined
+        }
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         appName="Database Details"
       />
-
       <div className={styles.mainContainer}>
         {isSidebarVisible && (
           <Sidebar
@@ -271,13 +279,14 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
         <div className={styles.contentContainer}>
           <div className={styles.databaseHeader}>
             <div className={styles.databaseInfo}>
+              {" "}
               <div className={styles.databaseIcon}>
-                {database?.type === "mysql" && "🐬"}
-                {database?.type === "postgresql" && "🐘"}
-                {database?.type === "sqlserver" && "🔷"}
-                {database?.type === "oracle" && "🔶"}
-                {database?.type === "sqlite" && "📄"}
-                {database?.type === "trial" && "🧪"}
+                {database?.type?.toLowerCase() === "mysql" && "🐬"}
+                {database?.type?.toLowerCase() === "postgresql" && "🐘"}
+                {database?.type?.toLowerCase() === "sqlserver" && "🔷"}
+                {database?.type?.toLowerCase() === "oracle" && "🔶"}
+                {database?.type?.toLowerCase() === "sqlite" && "📄"}
+                {database?.type?.toLowerCase() === "trial" && "🧪"}
               </div>
               <div>
                 <h1>{database?.name}</h1>
@@ -285,14 +294,16 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
                   <span className={styles.databaseType}>
                     {database?.type.toUpperCase()}
                   </span>
-                  <span className={styles.databaseHost}>{database?.host}</span>
+                  <span className={styles.databaseHost}>{database?.host}</span>{" "}
                   <span
                     className={`${styles.databaseStatus} ${
                       styles[database?.status || "disconnected"]
                     }`}
                   >
-                    {database?.status.charAt(0).toUpperCase() +
-                      database?.status.slice(1)}
+                    {database?.status
+                      ? database.status.charAt(0).toUpperCase() +
+                        database.status.slice(1)
+                      : "Unknown"}
                   </span>
                 </div>
               </div>
@@ -379,42 +390,37 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
                   <div className={styles.infoGrid}>
                     <div className={styles.infoLabel}>Name:</div>
                     <div className={styles.infoValue}>{database?.name}</div>
-
                     <div className={styles.infoLabel}>Type:</div>
                     <div className={styles.infoValue}>
                       {database?.type.toUpperCase()}
                     </div>
-
                     <div className={styles.infoLabel}>Host:</div>
                     <div className={styles.infoValue}>{database?.host}</div>
-
                     {database?.port && (
                       <>
                         <div className={styles.infoLabel}>Port:</div>
                         <div className={styles.infoValue}>{database.port}</div>
                       </>
                     )}
-
                     <div className={styles.infoLabel}>Username:</div>
                     <div className={styles.infoValue}>{database?.username}</div>
-
-                    <div className={styles.infoLabel}>Status:</div>
+                    <div className={styles.infoLabel}>Status:</div>{" "}
                     <div
                       className={`${styles.infoValue} ${styles.statusValue} ${
                         styles[database?.status || "disconnected"]
                       }`}
                     >
-                      {database?.status.charAt(0).toUpperCase() +
-                        database?.status.slice(1)}
+                      {database?.status
+                        ? database.status.charAt(0).toUpperCase() +
+                          database.status.slice(1)
+                        : "Unknown"}
                     </div>
-
                     <div className={styles.infoLabel}>Last Connected:</div>
                     <div className={styles.infoValue}>
                       {database?.lastConnected
                         ? formatRelativeTime(database.lastConnected)
                         : "Never"}
                     </div>
-
                     <div className={styles.infoLabel}>Sandbox:</div>
                     <div className={styles.infoValue}>
                       {database?.isSandbox ? "Yes" : "No"}
@@ -431,16 +437,16 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
                           {database.schema.tables.length}
                         </div>
                         <div className={styles.statLabel}>Tables</div>
-                      </div>
+                      </div>{" "}
                       <div className={styles.statBlock}>
                         <div className={styles.statValue}>
-                          {database.schema.views.length}
+                          {database.schema?.views?.length || 0}
                         </div>
                         <div className={styles.statLabel}>Views</div>
                       </div>
                       <div className={styles.statBlock}>
                         <div className={styles.statValue}>
-                          {database.schema.procedures.length}
+                          {database.schema?.procedures?.length || 0}
                         </div>
                         <div className={styles.statLabel}>
                           Stored Procedures
@@ -583,7 +589,6 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
           </div>
         </div>
       </div>
-
       {/* Disconnect Modal */}
       <Modal
         isOpen={isDisconnectModalOpen}
@@ -604,7 +609,6 @@ const DatabaseDetailsPage: React.FC<DatabaseDetailsPageProps> = ({
           <p>You can reconnect at any time.</p>
         </div>
       </Modal>
-
       {/* Query Modal */}
       <Modal
         isOpen={isQueryModalOpen}

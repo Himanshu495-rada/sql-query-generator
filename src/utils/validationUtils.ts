@@ -119,18 +119,16 @@ export const validateField = (
           };
         }
         break;
-
       case "minLength":
-        if (value && value.length < rule.value) {
+        if (value && rule.value && value.length < rule.value) {
           return {
             isValid: false,
             error: rule.message || `Must be at least ${rule.value} characters`,
           };
         }
         break;
-
       case "maxLength":
-        if (value && value.length > rule.value) {
+        if (value && rule.value && value.length > rule.value) {
           return {
             isValid: false,
             error: rule.message || `Cannot exceed ${rule.value} characters`,

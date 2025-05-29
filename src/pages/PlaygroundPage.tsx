@@ -29,11 +29,6 @@ interface PlaygroundItem {
   databaseName?: string;
 }
 
-interface SqlGenerationResult {
-  sql: string;
-  explanation: string;
-}
-
 // Utility to extract plain SQL (remove comments, normalize whitespace)
 function extractSQL(text: string): string {
   return text
@@ -59,14 +54,10 @@ const PlaygroundPage: React.FC = () => {
     playground,
     createPlayground,
     savePlayground,
-    executeQuery,
     setCurrentSql,
     isExecuting,
     isGenerating,
     queryResults,
-    error,
-    clearHistory,
-    selectHistoryItem,
   } = usePlayground(id);
 
   // UI state
@@ -78,7 +69,6 @@ const PlaygroundPage: React.FC = () => {
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [isDbExplorerVisible, setIsDbExplorerVisible] = useState(true);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
-  const [activeTab, setActiveTab] = useState("sql"); // 'sql' or 'explanation'
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
   // New state for chat messages
@@ -97,33 +87,6 @@ const PlaygroundPage: React.FC = () => {
     []
   );
 
-  // Example prompts for the prompt input
-  const examplePrompts = [
-    {
-      text: "Show me all customers who made purchases in the last month",
-      description: "Finds recent customers",
-    },
-    {
-      text: "List top 10 products by sales volume",
-      description: "Sales performance analysis",
-    },
-    {
-      text: "Find employees with salary greater than $50,000",
-      description: "HR data query",
-    },
-    {
-      text: "Show blog posts with more than 5 comments",
-      description: "Content engagement analysis",
-    },
-    {
-      text: "Get orders with total value over $1000",
-      description: "High-value orders",
-    },
-    {
-      text: "Find products with less than 10 items in stock",
-      description: "Low inventory alert",
-    },
-  ];
   // Effect to create a new playground if no ID is provided
   useEffect(() => {
     if (!id && !playground) {

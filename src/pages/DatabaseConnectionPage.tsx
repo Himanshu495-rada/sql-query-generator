@@ -28,8 +28,6 @@ const DatabaseConnectionPage: React.FC = () => {
     error,
     loadSampleDatabase,
     deleteConnection,
-    activeConnection,
-    refreshSchema,
     loadConnections,
     clearError,
     setError,
@@ -54,9 +52,11 @@ const DatabaseConnectionPage: React.FC = () => {
       setLocalLoading(true);
       try {
         await loadConnections();
-        
+
         if (!connections || connections.length === 0) {
-          const fetchedConnections = await api.get<ConnectionsResponse>('/connections');
+          const fetchedConnections = await api.get<ConnectionsResponse>(
+            "/connections"
+          );
           setLocalConnections(fetchedConnections.connections || []);
         }
       } catch (error) {
@@ -83,7 +83,7 @@ const DatabaseConnectionPage: React.FC = () => {
         password: connectionData.password,
         database: connectionData.database,
         file: connectionData.file,
-        createSandbox: connectionData.createSandbox
+        createSandbox: connectionData.createSandbox,
       };
 
       // Clear any existing error before attempting connection
@@ -96,12 +96,13 @@ const DatabaseConnectionPage: React.FC = () => {
       await loadConnections();
     } catch (err) {
       // Log the error for debugging
-      console.error('Connection error:', err);
-      
+      console.error("Connection error:", err);
+
       // If the error wasn't set by the context (which would happen in most cases),
       // we set it here as a fallback
       if (!error) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to connect to database';
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to connect to database";
         setError(errorMessage);
       }
     }
@@ -111,7 +112,7 @@ const DatabaseConnectionPage: React.FC = () => {
   const handleSelectTrial = async (databaseId: string) => {
     try {
       await loadSampleDatabase(databaseId);
-      
+
       await loadConnections();
     } catch (err) {
       console.error("Sample database loading error:", err);
@@ -122,7 +123,7 @@ const DatabaseConnectionPage: React.FC = () => {
   const handleDisconnect = async (databaseId: string) => {
     try {
       await disconnectDatabase(databaseId);
-      
+
       await loadConnections();
     } catch (err) {
       console.error("Disconnection error:", err);
@@ -133,20 +134,22 @@ const DatabaseConnectionPage: React.FC = () => {
   const handleViewSchema = async (databaseId: string) => {
     try {
       setSelectedConnection(databaseId);
-      
+
       // Find the connection in our existing connections list
-      const connection = displayedConnections.find(conn => conn?.id === databaseId);
-      
+      const connection = displayedConnections.find(
+        (conn) => conn?.id === databaseId
+      );
+
       // Directly fetch the schema for this connection ID
       try {
         // If the ID is valid, make the request directly to avoid using the context's active connection
-        if (databaseId && databaseId !== 'unknown') {
+        if (databaseId && databaseId !== "unknown") {
           const response = await api.get(`connections/${databaseId}/schema`);
-          
+
           // Check for correct schema structure in response
           if (response && response.data && response.data.schema) {
             console.log("Schema received:", response.data.schema);
-            
+
             // Store the schema in the connection object for later display
             if (connection) {
               connection.schema = response.data.schema;
@@ -160,7 +163,7 @@ const DatabaseConnectionPage: React.FC = () => {
       } catch (schemaError) {
         console.error("Error fetching schema:", schemaError);
       }
-      
+
       // Open the modal regardless - it will show loading state if schema isn't available
       setIsViewSchemaModalOpen(true);
     } catch (err) {
@@ -177,7 +180,7 @@ const DatabaseConnectionPage: React.FC = () => {
       await deleteConnection(connectionToDelete);
       setIsDeleteModalOpen(false);
       setConnectionToDelete(null);
-      
+
       await loadConnections();
     } catch (err) {
       console.error("Delete error:", err);
@@ -189,51 +192,59 @@ const DatabaseConnectionPage: React.FC = () => {
   // Get active connection schema
   const getConnectionSchema = () => {
     if (!selectedConnection) return null;
-    
+
     // Find the connection in our displayed connections list
-    const connection = displayedConnections.find(conn => conn?.id === selectedConnection);
-    
+    const connection = displayedConnections.find(
+      (conn) => conn?.id === selectedConnection
+    );
+
     // Return the schema if it exists
     return connection?.schema || null;
   };
 
   // Use connections from context if available, otherwise use local state
-  const displayedConnections = Array.isArray(connections) && connections.length > 0 
-    ? connections 
-    : (Array.isArray(localConnections) ? localConnections : []);
-    
+  const displayedConnections =
+    Array.isArray(connections) && connections.length > 0
+      ? connections
+      : Array.isArray(localConnections)
+      ? localConnections
+      : [];
+
   // Ensure all connections have required properties to avoid rendering errors
   const safeConnections = displayedConnections
-    .map(conn => {
+    .map((conn) => {
       if (!conn) return null;
       // Create a valid Database object with all required fields
       return {
-        id: conn.id || 'unknown',
-        name: conn.name || 'Unknown Connection',
-        type: conn.type || 'POSTGRESQL',
-        host: conn.host || 'localhost',
-        status: conn.status || 'error',
+        id: conn.id || "unknown",
+        name: conn.name || "Unknown Connection",
+        type: conn.type || "POSTGRESQL",
+        host: conn.host || "localhost",
+        status: conn.status || "error",
         lastConnected: conn.lastConnected || null,
-        isSandbox: !!conn.isSandbox
+        isSandbox: !!conn.isSandbox,
       };
     })
-    .filter(Boolean) as { // Type assertion to match Database interface
-      id: string;
-      name: string;
-      type: string;
-      host: string;
-      status: "connected" | "disconnected" | "error";
-      lastConnected: Date | null;
-      isSandbox: boolean;
-    }[];
-    
+    .filter(Boolean) as {
+    // Type assertion to match Database interface
+    id: string;
+    name: string;
+    type: string;
+    host: string;
+    status: "connected" | "disconnected" | "error";
+    lastConnected: Date | null;
+    isSandbox: boolean;
+  }[];
+
   const isLoadingConnections = isLoading || localLoading;
 
   // Format user data for Navbar
-  const formattedUser = user ? {
-    name: user.name,
-    avatarUrl: user.avatarUrl || undefined
-  } : undefined;
+  const formattedUser = user
+    ? {
+        name: user.name,
+        avatarUrl: user.avatarUrl || undefined,
+      }
+    : undefined;
 
   return (
     <div className={styles.databaseConnectionPage}>
@@ -248,10 +259,10 @@ const DatabaseConnectionPage: React.FC = () => {
         {isSidebarVisible && safeConnections && (
           <Sidebar
             isVisible={isSidebarVisible}
-            playgrounds={[]} 
+            playgrounds={[]}
             databases={(safeConnections || []).map((conn) => ({
-              id: conn?.id || 'unknown',
-              name: conn?.name || 'Unknown Connection',
+              id: conn?.id || "unknown",
+              name: conn?.name || "Unknown Connection",
               status: conn?.status || "connected",
             }))}
             onPlaygroundClick={() => {}}
@@ -278,7 +289,8 @@ const DatabaseConnectionPage: React.FC = () => {
             </div>
           )}
 
-          {isLoadingConnections && (!safeConnections || safeConnections.length === 0) ? (
+          {isLoadingConnections &&
+          (!safeConnections || safeConnections.length === 0) ? (
             <div className={styles.loadingContainer}>
               <LoadingSpinner
                 size="large"
@@ -302,8 +314,8 @@ const DatabaseConnectionPage: React.FC = () => {
                   <div className={styles.emptyState}>
                     <p>You don't have any database connections yet.</p>
                     <p>
-                      Connect to a database using the form above or try one of our
-                      sample databases.
+                      Connect to a database using the form above or try one of
+                      our sample databases.
                     </p>
                   </div>
                 ) : (
@@ -367,15 +379,25 @@ const DatabaseConnectionPage: React.FC = () => {
                   schema={{
                     tables: getConnectionSchema()?.tables || [],
                     views: getConnectionSchema()?.views || [],
-                    procedures: getConnectionSchema()?.procedures || []
+                    procedures: getConnectionSchema()?.procedures || [],
                   }}
-                  databaseName={safeConnections.find(conn => conn.id === selectedConnection)?.name || 'Database'}
-                  databaseType={safeConnections.find(conn => conn.id === selectedConnection)?.type || 'Unknown'}
+                  databaseName={
+                    safeConnections.find(
+                      (conn) => conn.id === selectedConnection
+                    )?.name || "Database"
+                  }
+                  databaseType={
+                    safeConnections.find(
+                      (conn) => conn.id === selectedConnection
+                    )?.type || "Unknown"
+                  }
                 />
               ) : (
                 <div className={styles.schemaLoading}>
                   <LoadingSpinner size="medium" color="primary" />
-                  <p>Loading schema or no schema available for this connection.</p>
+                  <p>
+                    Loading schema or no schema available for this connection.
+                  </p>
                 </div>
               )}
             </>

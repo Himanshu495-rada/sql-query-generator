@@ -2,7 +2,6 @@ import {
   DatabaseSchema,
   DatabaseTable,
   DatabaseView,
-  DatabaseProcedure,
 } from "../services/databaseService";
 
 /**
@@ -21,7 +20,7 @@ export const getAllColumns = (schema: DatabaseSchema): string[] => {
     });
   });
 
-  schema.views.forEach((view) => {
+  schema.views?.forEach((view) => {
     view.columns.forEach((column) => {
       columns.push(`${view.name}.${column.name}`);
     });
@@ -41,7 +40,7 @@ export const getAllTables = (schema: DatabaseSchema): string[] => {
  * Get all view names from a database schema
  */
 export const getAllViews = (schema: DatabaseSchema): string[] => {
-  return schema.views.map((view) => view.name);
+  return schema.views?.map((view) => view.name) || [];
 };
 
 /**
@@ -63,7 +62,7 @@ export const findViewByName = (
   schema: DatabaseSchema,
   viewName: string
 ): DatabaseView | undefined => {
-  return schema.views.find(
+  return schema.views?.find(
     (view) => view.name.toLowerCase() === viewName.toLowerCase()
   );
 };
@@ -74,7 +73,7 @@ export const findViewByName = (
 export const findColumnInTable = (
   table: DatabaseTable,
   columnName: string
-): any => {
+): DatabaseTable["columns"][0] | undefined => {
   return table.columns.find(
     (column) => column.name.toLowerCase() === columnName.toLowerCase()
   );
@@ -106,9 +105,8 @@ export const schemaToAiContext = (schema: DatabaseSchema): string => {
 
     schemaString += "\n";
   });
-
   // Add views
-  if (schema.views.length > 0) {
+  if (schema.views && schema.views.length > 0) {
     schemaString += "\nViews:\n";
     schema.views.forEach((view) => {
       schemaString += `View: ${view.name}\n`;
