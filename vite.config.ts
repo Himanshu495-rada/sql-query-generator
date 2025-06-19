@@ -8,9 +8,6 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
   },
-  server: {
-    historyApiFallback: true,
-  },
   preview: {
     port: 4173,
     strictPort: true,
